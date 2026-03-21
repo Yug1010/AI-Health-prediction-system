@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HealthMind AI – Intelligent Health Assessment</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ═══════ HEADER ═══════════════════════════════════════════════════════════ -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-icon">🧠</span>
+      <div>
+        <span class="logo-name">HealthMind <span class="logo-ai">AI</span></span>
+        <span class="logo-tag">Intelligent Health Assessment</span>
+      </div>
+    </div>
+    <nav class="header-nav">
+      <a href="#assessment-section">Assess</a>
+      <a href="#how-it-works">How It Works</a>
+      <span class="disclaimer-chip">⚠️ Not a medical diagnosis</span>
+    </nav>
+  </div>
+</header>
+
+<!-- ═══════ HERO ══════════════════════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">AI-Powered · Explainable · Responsible</div>
+    <h1>Understand Your Symptoms<br /><span class="hero-accent">Instantly</span></h1>
+    <p class="hero-sub">
+      Enter your age, vitals, and symptoms — HealthMind AI uses machine learning
+      and medical rules to suggest probable conditions with risk scores and explanations.
+    </p>
+    <a href="#assessment-section" class="btn-primary">Start Assessment ↓</a>
+  </div>
+  <div class="hero-stats">
+    <div class="stat-card"><span class="stat-num">15+</span><span class="stat-lbl">Conditions</span></div>
+    <div class="stat-card"><span class="stat-num">45+</span><span class="stat-lbl">Symptoms</span></div>
+    <div class="stat-card"><span class="stat-num">6</span><span class="stat-lbl">Vital Signs</span></div>
+    <div class="stat-card"><span class="stat-num">14</span><span class="stat-lbl">Comorbidities</span></div>
+  </div>
+</section>
+
+<!-- ═══════ HOW IT WORKS ══════════════════════════════════════════════════════ -->
+<section class="how-it-works" id="how-it-works">
+  <h2 class="section-title">How It Works</h2>
+  <div class="steps">
+    <div class="step"><div class="step-num">01</div><div class="step-icon">👤</div><h3>Patient Profile</h3><p>Enter age, gender, and preexisting conditions.</p></div>
+    <div class="step-arrow">→</div>
+    <div class="step"><div class="step-num">02</div><div class="step-icon">🩺</div><h3>Enter Vitals</h3><p>Optionally provide BP, SpO2, heart rate, and temperature.</p></div>
+    <div class="step-arrow">→</div>
+    <div class="step"><div class="step-num">03</div><div class="step-icon">🔍</div><h3>Select Symptoms</h3><p>Search or browse by category.</p></div>
+    <div class="step-arrow">→</div>
+    <div class="step"><div class="step-num">04</div><div class="step-icon">🤖</div><h3>AI Analysis</h3><p>ML model + medical rules analyse everything together.</p></div>
+    <div class="step-arrow">→</div>
+    <div class="step"><div class="step-num">05</div><div class="step-icon">📊</div><h3>Results</h3><p>Risk score, conditions, vitals status, and explanations.</p></div>
+  </div>
+</section>
+
+<!-- ═══════ MAIN ASSESSMENT ═══════════════════════════════════════════════════ -->
+<section class="assessment-section" id="assessment-section">
+  <div class="container">
+
+    <!-- ══ LEFT COLUMN: Input ════════════════════════════════════════════════ -->
+    <div class="input-column">
+
+      <!-- ── Step 1: Patient Profile ─────────────────────────────────────── -->
+      <div class="card step-card" id="card-profile">
+        <div class="card-step-badge">Step 1</div>
+        <h2 class="card-title">👤 Patient Profile</h2>
+        <p class="card-sub">Basic information to personalise risk assessment</p>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="input-age">Age <span class="required">*</span></label>
+            <input type="number" id="input-age" min="1" max="120" placeholder="e.g. 35" />
+          </div>
+          <div class="form-group">
+            <label for="input-gender">Gender</label>
+            <select id="input-gender">
+              <option value="">Select…</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+              <option value="prefer_not">Prefer not to say</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Pre-existing conditions -->
+        <div class="form-group mt-1">
+          <label>Pre-existing Conditions <span class="optional">(select all that apply)</span></label>
+          <div id="preexisting-chips" class="condition-chips">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Step 2: Vitals ──────────────────────────────────────────────── -->
+      <div class="card step-card" id="card-vitals">
+        <div class="card-step-badge">Step 2</div>
+        <h2 class="card-title">🩺 Current Vitals</h2>
+        <p class="card-sub">Leave blank if not measured — all fields are optional</p>
+
+        <div class="vitals-grid">
+          <div class="vital-input-group">
+            <label for="v-hr">❤️ Heart Rate</label>
+            <div class="vital-input-wrap">
+              <input type="number" id="v-hr" placeholder="72" min="20" max="300" />
+              <span class="vital-unit">bpm</span>
+            </div>
+            <div id="v-hr-status" class="vital-status-pill"></div>
+          </div>
+          <div class="vital-input-group bp-group">
+            <label>🩸 Blood Pressure <span style="font-weight:400;color:#94A3B8">(mmHg)</span></label>
+            <div class="vital-bp-row">
+              <div class="vital-input-wrap">
+                <input type="number" id="v-sys" placeholder="Systolic  e.g. 120" min="50" max="300" />
+                <span class="vital-unit">sys</span>
+              </div>
+              <span class="bp-slash">/</span>
+              <div class="vital-input-wrap">
+                <input type="number" id="v-dia" placeholder="Diastolic  e.g. 80" min="30" max="200" />
+                <span class="vital-unit">dia</span>
+              </div>
+            </div>
+            <div id="v-bp-status" class="vital-status-pill"></div>
+          </div>
+          <div class="vital-input-group">
+            <label for="v-temp">🌡️ Temperature</label>
+            <div class="vital-input-wrap">
+              <input type="number" id="v-temp" placeholder="98.6" min="90" max="115" step="0.1" />
+              <span class="vital-unit">°F</span>
+            </div>
+            <div id="v-temp-status" class="vital-status-pill"></div>
+          </div>
+          <div class="vital-input-group">
+            <label for="v-spo2">💨 SpO2</label>
+            <div class="vital-input-wrap">
+              <input type="number" id="v-spo2" placeholder="98" min="50" max="100" />
+              <span class="vital-unit">%</span>
+            </div>
+            <div id="v-spo2-status" class="vital-status-pill"></div>
+          </div>
+          <div class="vital-input-group">
+            <label for="v-rr">🫁 Respiratory Rate</label>
+            <div class="vital-input-wrap">
+              <input type="number" id="v-rr" placeholder="16" min="5" max="60" />
+              <span class="vital-unit">br/min</span>
+            </div>
+            <div id="v-rr-status" class="vital-status-pill"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Step 3: Symptoms ────────────────────────────────────────────── -->
+      <div class="card step-card" id="card-symptoms">
+        <div class="card-step-badge">Step 3</div>
+        <h2 class="card-title">🔍 Symptoms</h2>
+        <p class="card-sub">Select all symptoms you are currently experiencing</p>
+
+        <!-- Search -->
+        <div class="search-wrap">
+          <input type="text" id="symptom-search" placeholder="Search symptoms… e.g. headache, fever" autocomplete="off" />
+          <span class="search-icon">🔎</span>
+        </div>
+        <div id="search-results" class="search-results hidden"></div>
+
+        <!-- Tags -->
+        <div class="selected-section">
+          <div class="selected-header">
+            <span>Selected symptoms</span>
+            <span id="selected-count" class="count-badge">0</span>
+          </div>
+          <div id="selected-tags" class="tag-container">
+            <span class="tag-placeholder">No symptoms selected yet</span>
+          </div>
+          <button id="clear-btn" class="btn-ghost hidden">✕ Clear all</button>
+        </div>
+
+        <!-- Category browser -->
+        <div class="category-section">
+          <div class="category-header-row">
+            <span>Browse by category</span>
+            <button id="toggle-categories" class="btn-text">Show ▼</button>
+          </div>
+          <div id="categories-panel" class="categories-panel hidden"></div>
+        </div>
+      </div>
+
+      <!-- ── Analyse button ──────────────────────────────────────────────── -->
+      <button id="analyse-btn" class="btn-analyse" disabled>
+        <span class="btn-icon">🧠</span> Analyse Now
+      </button>
+      <p class="min-note">Age + minimum 2 symptoms required</p>
+
+    </div><!-- /input-column -->
+
+    <!-- ══ RIGHT COLUMN: Results ════════════════════════════════════════════ -->
+    <div class="results-panel" id="results-panel">
+
+      <div class="empty-state" id="empty-state">
+        <div class="empty-icon">🏥</div>
+        <h3>Results will appear here</h3>
+        <p>Complete the form on the left and click <strong>Analyse Now</strong>.</p>
+      </div>
+
+      <div class="loading-state hidden" id="loading-state">
+        <div class="spinner"></div>
+        <p>Analysing your health profile…</p>
+      </div>
+
+      <div class="results-content hidden" id="results-content">
+
+        <!-- Patient summary bar -->
+        <div id="patient-summary-bar" class="patient-summary-bar"></div>
+
+        <!-- 🚨 Emergency Alert -->
+        <div id="emergency-alert" class="emergency-alert hidden">
+          <div class="emergency-header">
+            <span class="emergency-icon">🚨</span>
+            <h3>EMERGENCY ALERT</h3>
+          </div>
+          <div id="emergency-messages"></div>
+          <div class="emergency-actions">
+            <a href="tel:112" class="btn-emergency">📞 Call 112</a>
+            <a href="tel:102" class="btn-emergency">📞 Call 102</a>
+          </div>
+        </div>
+
+        <!-- Risk gauge + score -->
+        <div class="risk-gauge-card">
+          <div class="risk-left">
+            <h3>Overall Risk Score</h3>
+            <div class="risk-score-display">
+              <span id="risk-number" class="risk-number">0</span>
+              <span class="risk-max">/100</span>
+            </div>
+            <span id="risk-label-badge" class="risk-badge">—</span>
+            <p id="confidence-label" class="confidence-text"></p>
+          </div>
+          <div class="risk-right">
+            <div class="gauge-wrap">
+              <canvas id="gauge-chart" width="160" height="160"></canvas>
+              <div class="gauge-overlay">
+                <span id="gauge-label" class="gauge-label-text">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vitals status panel -->
+        <div id="vitals-panel" class="vitals-panel hidden">
+          <h3>🩺 Vitals Status</h3>
+          <div id="vitals-cards" class="vitals-cards-row"></div>
+        </div>
+
+        <!-- Preexisting impact -->
+        <div id="preexisting-panel" class="preexisting-panel hidden">
+          <h3>⚕️ Preexisting Condition Impact</h3>
+          <div id="preexisting-impact-list"></div>
+        </div>
+
+        <!-- Predictions -->
+        <div class="predictions-section">
+          <h3>🔬 Probable Conditions</h3>
+          <p class="section-sub">Ordered by probability — adjusted for your age and health profile</p>
+          <div id="predictions-list"></div>
+        </div>
+
+        <!-- Explainability -->
+        <div class="explain-section">
+          <h3>💡 Symptom Contribution Analysis</h3>
+          <p class="section-sub">How much each selected symptom influenced the prediction</p>
+          <div class="chart-wrap">
+            <canvas id="explain-chart"></canvas>
+          </div>
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="disclaimer-box">
+          <strong>⚠️ Important Disclaimer</strong>
+          <p>HealthMind AI is for early health awareness and educational purposes only.
+          It does <strong>not</strong> replace professional medical advice, diagnosis, or treatment.
+          Always consult a qualified healthcare provider for any medical concern.</p>
+        </div>
+
+      </div><!-- /results-content -->
+    </div><!-- /results-panel -->
+  </div><!-- /container -->
+</section>
+
+<!-- ═══════ FOOTER ════════════════════════════════════════════════════════════ -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-logo">🧠 HealthMind AI</div>
+    <p>Python · Flask · scikit-learn · Chart.js</p>
+    <p class="footer-disclaimer">For educational & hackathon purposes only · Not a medical device</p>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
