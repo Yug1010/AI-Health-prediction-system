@@ -76,6 +76,19 @@ body { font-family: var(--font); background: var(--light); color: var(--text); l
 .header-nav { display: flex; align-items: center; gap: 1.5rem; }
 .header-nav a { color: #CBD5E1; text-decoration: none; font-size: .9rem; transition: color .2s; }
 .header-nav a:hover { color: var(--mint); }
+.nav-link-pill {
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.15);
+  color: #CBD5E1 !important;
+  padding: .3rem .9rem;
+  border-radius: 50px;
+  font-size: .85rem;
+  font-weight: 600;
+  transition: all .2s;
+  text-decoration: none;
+}
+.nav-link-pill:hover  { background: rgba(2,195,154,.15); border-color: var(--mint); color: var(--mint) !important; }
+.nav-link-pill.active-nav { background: rgba(2,195,154,.18); border-color: var(--mint); color: var(--mint) !important; }
 .disclaimer-chip {
   background: rgba(247,183,49,.15); border: 1px solid rgba(247,183,49,.4);
   color: var(--warn); font-size: .75rem; padding: .25rem .65rem; border-radius: 50px;

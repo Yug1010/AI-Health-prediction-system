@@ -1,0 +1,203 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   HealthMind AI – Mental Health Module CSS
+   Only new rules — inherits all base variables from style.css
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── MH Hero ─────────────────────────────────────────────────────────────── */
+.mh-hero {
+  background: linear-gradient(135deg, #0A2540 0%, #0D3B5E 60%, #0A3347 100%);
+  color: var(--white);
+  padding: 5rem 2rem 4rem;
+  text-align: center;
+}
+.mh-hero-content { max-width: 640px; margin: 0 auto; }
+.mh-hero-meta { display: flex; justify-content: center; flex-wrap: wrap; gap: .6rem; margin: 1.25rem 0 2rem; }
+.meta-chip {
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+  color: #94A3B8; font-size: .8rem; padding: .28rem .8rem; border-radius: 50px;
+}
+
+/* ── Layout ──────────────────────────────────────────────────────────────── */
+.mh-assessment { padding: 3rem 1.5rem; }
+.mh-container {
+  max-width: 1280px; margin: 0 auto;
+  display: grid; grid-template-columns: 520px 1fr; gap: 2rem; align-items: start;
+}
+.mh-form-col { display: flex; flex-direction: column; gap: 1.25rem; }
+
+/* ── Profile card ────────────────────────────────────────────────────────── */
+.mh-profile-card { padding: 1.4rem 1.6rem; }
+.mh-card-title { font-size: 1rem; font-weight: 700; color: var(--navy); margin-bottom: .9rem; }
+.optional-tag  { font-size: .75rem; font-weight: 400; color: #94A3B8; }
+
+/* ── Scale legend ────────────────────────────────────────────────────────── */
+.scale-legend {
+  background: var(--white); border-radius: var(--radius);
+  padding: .9rem 1.2rem; box-shadow: var(--card-sh);
+}
+.scale-title { display: block; font-size: .8rem; font-weight: 700; color: var(--muted); margin-bottom: .55rem; }
+.scale-chips  { display: flex; flex-wrap: wrap; gap: .4rem; }
+.scale-chip {
+  font-size: .75rem; font-weight: 600; padding: .22rem .65rem;
+  border-radius: 50px; border: 1.5px solid;
+}
+.s0 { background: rgba(2,195,154,.08);  border-color: #02C39A; color: #028060; }
+.s1 { background: rgba(247,183,49,.08); border-color: #F7B731; color: #8B6000; }
+.s2 { background: rgba(230,126,34,.08); border-color: #E67E22; color: #A04000; }
+.s3 { background: rgba(230,57,70,.08);  border-color: #E63946; color: #9B1C1C; }
+
+/* ── Domain card ─────────────────────────────────────────────────────────── */
+.mh-domain-card {
+  border-radius: var(--radius); padding: 1.4rem 1.6rem; box-shadow: var(--card-sh);
+  background: var(--white);
+}
+.crisis-domain { border: 2px solid rgba(230,57,70,.35); background: #FFF8F8; }
+.domain-header { display: flex; align-items: center; gap: .6rem; margin-bottom: 1rem; }
+.domain-icon   { font-size: 1.4rem; }
+.domain-title  { font-size: 1rem; font-weight: 700; color: var(--navy); }
+
+/* ── Question item ───────────────────────────────────────────────────────── */
+.question-item {
+  padding: .9rem 0;
+  border-bottom: 1px solid #F1F5F9;
+}
+.question-item:last-child { border-bottom: none; padding-bottom: 0; }
+.crisis-question { background: rgba(230,57,70,.04); border-radius: 8px; padding: .9rem; margin: 0 -.5rem; }
+.question-text { font-size: .9rem; color: var(--text); margin-bottom: .65rem; font-weight: 500; line-height: 1.5; }
+
+/* Answer buttons */
+.answer-buttons {
+  display: flex; gap: .4rem; flex-wrap: wrap;
+}
+.ans-btn {
+  width: 44px; height: 44px; border-radius: 10px;
+  border: 2px solid var(--border); background: var(--white);
+  font-size: .95rem; font-weight: 700; color: var(--muted);
+  cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.ans-btn:hover { border-color: var(--teal); color: var(--teal); background: rgba(2,128,144,.05); }
+.ans-btn.selected-0 { background: rgba(2,195,154,.15);  border-color: #02C39A; color: #028060; }
+.ans-btn.selected-1 { background: rgba(247,183,49,.15); border-color: #F7B731; color: #8B6000; }
+.ans-btn.selected-2 { background: rgba(230,126,34,.15); border-color: #E67E22; color: #A04000; }
+.ans-btn.selected-3 { background: rgba(230,57,70,.15);  border-color: #E63946; color: #9B1C1C; }
+
+.answer-label { font-size: .72rem; color: var(--muted); margin-top: .4rem; font-style: italic; }
+
+/* ── Progress bar ────────────────────────────────────────────────────────── */
+.mh-progress-bar-wrap { background: var(--white); border-radius: var(--radius); padding: 1rem 1.4rem; box-shadow: var(--card-sh); }
+.mh-progress-info { display: flex; justify-content: space-between; font-size: .82rem; color: var(--muted); font-weight: 600; margin-bottom: .5rem; }
+.mh-progress-track { height: 8px; background: var(--light); border-radius: 50px; overflow: hidden; }
+.mh-progress-fill  { height: 100%; background: linear-gradient(90deg, var(--teal), var(--mint)); border-radius: 50px; transition: width .4s ease; }
+
+/* ── Results panel ───────────────────────────────────────────────────────── */
+.mh-results-panel {
+  background: var(--white); border-radius: 16px;
+  padding: 1.75rem; box-shadow: var(--card-sh); min-height: 450px;
+  position: sticky; top: 80px;
+}
+
+/* ── Crisis alert ────────────────────────────────────────────────────────── */
+.mh-crisis-alert {
+  background: linear-gradient(135deg, #1a0010, #2d0015);
+  border: 2px solid #E63946; border-radius: var(--radius);
+  padding: 1.4rem 1.5rem; margin-bottom: 1.5rem;
+  animation: pulse-border 1.5s infinite;
+}
+.crisis-header { display: flex; align-items: center; gap: .7rem; margin-bottom: .6rem; }
+.crisis-header span { font-size: 1.8rem; }
+.crisis-header h3   { color: #FFB3B8; font-size: 1.1rem; font-weight: 800; }
+.mh-crisis-alert p  { color: #FFCDD2; font-size: .88rem; line-height: 1.6; margin-bottom: .9rem; }
+.crisis-lines { display: flex; flex-wrap: wrap; gap: .6rem; }
+.crisis-btn {
+  background: #B71C1C; color: #fff; padding: .5rem 1rem;
+  border-radius: 8px; text-decoration: none; font-weight: 700;
+  font-size: .85rem; transition: opacity .2s;
+}
+.crisis-btn:hover { opacity: .85; }
+.crisis-btn-red { background: #7C0000; }
+
+/* ── Score card ──────────────────────────────────────────────────────────── */
+.mh-score-card {
+  background: linear-gradient(135deg, var(--navy), #1A3A5C);
+  border-radius: var(--radius); padding: 1.5rem;
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 1rem; margin-bottom: 1.25rem; color: var(--white);
+}
+.score-label { font-size: .78rem; color: #94A3B8; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .35rem; }
+.score-number-wrap { display: flex; align-items: baseline; gap: .2rem; }
+.mh-score-num  { font-size: 3.5rem; font-weight: 800; line-height: 1; }
+.score-denom   { font-size: 1.1rem; color: #64748B; }
+.mh-level-badge {
+  display: inline-block; padding: .28rem .8rem; border-radius: 50px;
+  font-size: .82rem; font-weight: 700; margin-top: .5rem;
+}
+.mh-gauge-wrap { position: relative; width: 140px; height: 140px; }
+
+/* ── Score bar ───────────────────────────────────────────────────────────── */
+.mh-score-bar-section { margin-bottom: 1.25rem; }
+.mh-score-track {
+  position: relative; height: 18px; background: var(--light);
+  border-radius: 50px; overflow: visible; margin-bottom: .4rem;
+}
+.mh-score-fill {
+  height: 100%; border-radius: 50px;
+  background: linear-gradient(90deg, #02C39A, #F7B731, #E67E22, #E63946, #7C0000);
+  transition: width 1.2s ease;
+}
+.mh-score-zones {
+  position: absolute; top: 22px; left: 0; width: 100%;
+  font-size: .65rem; color: var(--muted);
+}
+.mh-score-zones span { position: absolute; transform: translateX(-50%); }
+.zone-labels {
+  display: flex; justify-content: space-between;
+  font-size: .72rem; font-weight: 700; margin-top: 1.6rem;
+}
+
+/* ── Summary box ─────────────────────────────────────────────────────────── */
+.mh-summary-box {
+  border-radius: var(--radius); padding: .9rem 1.1rem;
+  border-left: 4px solid var(--teal); background: rgba(2,128,144,.06);
+  margin-bottom: 1.5rem; font-size: .88rem; color: var(--text); line-height: 1.6;
+}
+
+/* ── Domain breakdown ────────────────────────────────────────────────────── */
+.mh-domain-section { margin-bottom: 1rem; }
+.mh-domain-section h3 { font-size: 1rem; font-weight: 700; color: var(--navy); margin-bottom: .3rem; }
+
+/* Domain progress bars */
+.domain-bars-section { margin-bottom: 1.5rem; }
+.domain-bar-row { margin-bottom: .7rem; }
+.domain-bar-header { display: flex; justify-content: space-between; font-size: .8rem; margin-bottom: .28rem; }
+.domain-bar-name   { font-weight: 600; color: var(--navy); }
+.domain-bar-score  { font-weight: 700; }
+.domain-bar-track  { height: 9px; background: var(--light); border-radius: 50px; overflow: hidden; }
+.domain-bar-fill   { height: 100%; border-radius: 50px; transition: width 1s ease; }
+
+/* ── Recommendations ─────────────────────────────────────────────────────── */
+.mh-recs-section h3 { font-size: 1rem; font-weight: 700; color: var(--navy); margin-bottom: .75rem; }
+.recs-list { display: flex; flex-direction: column; gap: .55rem; margin-bottom: 1.5rem; }
+.rec-item {
+  display: flex; gap: .7rem; align-items: flex-start;
+  background: var(--light); border-radius: 10px; padding: .7rem .9rem;
+  font-size: .85rem; color: var(--text); line-height: 1.5;
+}
+.rec-num {
+  min-width: 22px; height: 22px; border-radius: 50%;
+  background: var(--teal); color: var(--white);
+  font-size: .72rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .mh-container { grid-template-columns: 1fr; }
+  .mh-results-panel { position: static; }
+}
+@media (max-width: 600px) {
+  .mh-hero h1 { font-size: 2rem; }
+  .mh-container { padding: 0; }
+  .ans-btn { width: 40px; height: 40px; font-size: .85rem; }
+  .zone-labels { font-size: .65rem; }
+}
