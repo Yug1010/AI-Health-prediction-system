@@ -21,10 +21,10 @@ SYMPTOM_DISPLAY = {s: s.replace("_", " ").title() for s in SYMPTOMS}
 SYMPTOM_CATEGORIES = {
     "Fever & Temperature":  ["fever", "high_fever", "mild_fever", "chills", "sweating", "cold_sweats"],
     "Respiratory":          ["cough", "dry_cough", "shortness_of_breath", "wheezing",
-                              "chest_pain", "chest_tightness", "congestion"],
+                             "chest_pain", "chest_tightness", "congestion"],
     "Head & Neurological":  ["headache", "severe_headache", "dizziness", "blurred_vision"],
     "Body & Muscles":       ["body_ache", "joint_pain", "muscle_pain", "back_pain",
-                              "neck_stiffness", "weakness", "fatigue"],
+                             "neck_stiffness", "weakness", "fatigue"],
     "Digestive":            ["nausea", "vomiting", "diarrhea", "abdominal_pain", "loss_of_appetite"],
     "Nose & Throat":        ["runny_nose", "sore_throat", "sneezing", "loss_of_taste", "loss_of_smell"],
     "Skin":                 ["rash", "itching", "pale_skin", "skin_rash"],
@@ -35,7 +35,7 @@ SYMPTOM_CATEGORIES = {
 # ── Disease knowledge base ────────────────────────────────────────────────────
 DISEASES = {
     "Common Cold": {
-        "symptoms":       ["mild_fever","runny_nose","sore_throat","sneezing","cough","congestion","fatigue"],
+        "symptoms":       ["mild_fever", "runny_nose", "sore_throat", "sneezing", "cough", "congestion", "fatigue"],
         "risk_level":     "low",
         "description":    "A viral upper-respiratory infection. Common in children & elderly. Usually self-limiting within 7–10 days.",
         "recommendation": "Rest, stay hydrated, use OTC decongestants. No antibiotics needed.",
@@ -44,7 +44,7 @@ DISEASES = {
         "age_risk":       {"child": 1.2, "adult": 1.0, "senior": 1.3},
     },
     "Influenza (Flu)": {
-        "symptoms":       ["high_fever","chills","body_ache","fatigue","cough","headache","sweating","sore_throat"],
+        "symptoms":       ["high_fever", "chills", "body_ache", "fatigue", "cough", "headache", "sweating", "sore_throat"],
         "risk_level":     "medium",
         "description":    "Contagious respiratory illness. Significantly more dangerous in seniors (65+) and young children.",
         "recommendation": "Rest, fluids, antivirals within 48 hrs. Seek care if symptoms worsen rapidly.",
@@ -53,8 +53,8 @@ DISEASES = {
         "age_risk":       {"child": 1.3, "adult": 1.0, "senior": 1.6},
     },
     "COVID-19": {
-        "symptoms":       ["fever","dry_cough","fatigue","loss_of_taste","loss_of_smell",
-                           "shortness_of_breath","body_ache","headache"],
+        "symptoms":       ["fever", "dry_cough", "fatigue", "loss_of_taste", "loss_of_smell",
+                           "shortness_of_breath", "body_ache", "headache"],
         "risk_level":     "high",
         "description":    "SARS-CoV-2 infection. High risk in seniors and those with preexisting respiratory/cardiac conditions.",
         "recommendation": "Isolate immediately, get tested, monitor SpO2. Seek care if SpO2 drops below 94%.",
@@ -63,7 +63,7 @@ DISEASES = {
         "age_risk":       {"child": 0.7, "adult": 1.0, "senior": 2.0},
     },
     "Pneumonia": {
-        "symptoms":       ["high_fever","cough","chest_pain","shortness_of_breath","fatigue","chills","sweating"],
+        "symptoms":       ["high_fever", "cough", "chest_pain", "shortness_of_breath", "fatigue", "chills", "sweating"],
         "risk_level":     "high",
         "description":    "Lung infection serious in seniors, children under 5, and immunocompromised patients.",
         "recommendation": "Seek medical attention promptly. Requires prescribed antibiotics or antivirals.",
@@ -72,7 +72,7 @@ DISEASES = {
         "age_risk":       {"child": 1.5, "adult": 1.0, "senior": 2.2},
     },
     "Dengue Fever": {
-        "symptoms":       ["high_fever","severe_headache","joint_pain","muscle_pain","rash","fatigue","nausea","vomiting"],
+        "symptoms":       ["high_fever", "severe_headache", "joint_pain", "muscle_pain", "rash", "fatigue", "nausea", "vomiting"],
         "risk_level":     "high",
         "description":    "Mosquito-borne viral infection. Risk of severe dengue higher in children and adults with previous infection.",
         "recommendation": "See a doctor immediately. Stay hydrated. Use paracetamol only — avoid aspirin/ibuprofen.",
@@ -81,7 +81,7 @@ DISEASES = {
         "age_risk":       {"child": 1.4, "adult": 1.0, "senior": 1.3},
     },
     "Malaria": {
-        "symptoms":       ["high_fever","chills","sweating","headache","nausea","vomiting","body_ache","fatigue"],
+        "symptoms":       ["high_fever", "chills", "sweating", "headache", "nausea", "vomiting", "body_ache", "fatigue"],
         "risk_level":     "high",
         "description":    "Parasite infection via Anopheles mosquitoes. Severe outcomes more likely in children and pregnant women.",
         "recommendation": "Immediate medical attention required. Blood tests and antimalarial prescription needed.",
@@ -90,7 +90,7 @@ DISEASES = {
         "age_risk":       {"child": 1.5, "adult": 1.0, "senior": 1.3},
     },
     "Typhoid": {
-        "symptoms":       ["high_fever","abdominal_pain","weakness","headache","loss_of_appetite","nausea","fatigue","sweating"],
+        "symptoms":       ["high_fever", "abdominal_pain", "weakness", "headache", "loss_of_appetite", "nausea", "fatigue", "sweating"],
         "risk_level":     "high",
         "description":    "Bacterial infection via contaminated food/water. More severe in children and immunocompromised patients.",
         "recommendation": "Consult a doctor for antibiotics. Strict hygiene. Stay hydrated.",
@@ -99,7 +99,7 @@ DISEASES = {
         "age_risk":       {"child": 1.4, "adult": 1.0, "senior": 1.2},
     },
     "Diabetes (Type 2)": {
-        "symptoms":       ["frequent_urination","excessive_thirst","fatigue","blurred_vision","slow_healing_wounds","weakness"],
+        "symptoms":       ["frequent_urination", "excessive_thirst", "fatigue", "blurred_vision", "slow_healing_wounds", "weakness"],
         "risk_level":     "medium",
         "description":    "Chronic metabolic condition. Risk increases significantly after age 40 and with obesity.",
         "recommendation": "Consult a doctor for blood sugar testing. Diet, exercise, and medication may be needed.",
@@ -108,7 +108,7 @@ DISEASES = {
         "age_risk":       {"child": 0.4, "adult": 1.0, "senior": 1.5},
     },
     "Hypertension": {
-        "symptoms":       ["headache","dizziness","chest_pain","shortness_of_breath","nosebleed","rapid_heartbeat","fatigue"],
+        "symptoms":       ["headache", "dizziness", "chest_pain", "shortness_of_breath", "nosebleed", "rapid_heartbeat", "fatigue"],
         "risk_level":     "high",
         "description":    "Elevated blood pressure. Risk increases with age, obesity, and family history.",
         "recommendation": "See a doctor for BP measurement. May require medication and lifestyle changes.",
@@ -117,7 +117,7 @@ DISEASES = {
         "age_risk":       {"child": 0.3, "adult": 1.0, "senior": 1.8},
     },
     "Heart Attack": {
-        "symptoms":       ["chest_pain","shortness_of_breath","arm_pain","cold_sweats","nausea","dizziness","rapid_heartbeat","palpitations"],
+        "symptoms":       ["chest_pain", "shortness_of_breath", "arm_pain", "cold_sweats", "nausea", "dizziness", "rapid_heartbeat", "palpitations"],
         "risk_level":     "critical",
         "description":    "Medical emergency. Risk sharply increases in men over 45 and women over 55, and in those with prior heart disease.",
         "recommendation": "🚨 CALL EMERGENCY SERVICES (102/112) IMMEDIATELY. Do not drive yourself.",
@@ -126,7 +126,7 @@ DISEASES = {
         "age_risk":       {"child": 0.1, "adult": 1.0, "senior": 2.5},
     },
     "Appendicitis": {
-        "symptoms":       ["abdominal_pain","nausea","vomiting","fever","loss_of_appetite","weakness"],
+        "symptoms":       ["abdominal_pain", "nausea", "vomiting", "fever", "loss_of_appetite", "weakness"],
         "risk_level":     "critical",
         "description":    "Appendix inflammation — surgical emergency. Most common in ages 10–30.",
         "recommendation": "🚨 SEEK EMERGENCY CARE IMMEDIATELY. Do not eat, drink, or take pain relievers.",
@@ -135,7 +135,7 @@ DISEASES = {
         "age_risk":       {"child": 1.3, "adult": 1.2, "senior": 1.0},
     },
     "Asthma": {
-        "symptoms":       ["shortness_of_breath","wheezing","chest_tightness","cough","fatigue"],
+        "symptoms":       ["shortness_of_breath", "wheezing", "chest_tightness", "cough", "fatigue"],
         "risk_level":     "medium",
         "description":    "Chronic airway inflammation. Often starts in childhood; worsens with allergens and pollution.",
         "recommendation": "Use prescribed rescue inhaler. Identify triggers. Seek emergency care if breathing is severely compromised.",
@@ -144,7 +144,7 @@ DISEASES = {
         "age_risk":       {"child": 1.6, "adult": 1.0, "senior": 1.2},
     },
     "Migraine": {
-        "symptoms":       ["severe_headache","nausea","vomiting","dizziness","fatigue","blurred_vision"],
+        "symptoms":       ["severe_headache", "nausea", "vomiting", "dizziness", "fatigue", "blurred_vision"],
         "risk_level":     "low",
         "description":    "Neurological condition. More prevalent in adults 25–55, especially women.",
         "recommendation": "Rest in a dark quiet room. Take prescribed medication. Track triggers.",
@@ -153,7 +153,7 @@ DISEASES = {
         "age_risk":       {"child": 0.7, "adult": 1.2, "senior": 0.9},
     },
     "Food Poisoning": {
-        "symptoms":       ["nausea","vomiting","diarrhea","abdominal_pain","fever","weakness","fatigue"],
+        "symptoms":       ["nausea", "vomiting", "diarrhea", "abdominal_pain", "fever", "weakness", "fatigue"],
         "risk_level":     "medium",
         "description":    "Contaminated food/water illness. More dangerous in children, seniors, and immunocompromised patients.",
         "recommendation": "Stay hydrated. BRAT diet. Seek help if symptoms persist >48 hrs or dehydration occurs.",
@@ -162,7 +162,7 @@ DISEASES = {
         "age_risk":       {"child": 1.4, "adult": 1.0, "senior": 1.5},
     },
     "Anemia": {
-        "symptoms":       ["fatigue","weakness","pale_skin","shortness_of_breath","dizziness","headache","rapid_heartbeat"],
+        "symptoms":       ["fatigue", "weakness", "pale_skin", "shortness_of_breath", "dizziness", "headache", "rapid_heartbeat"],
         "risk_level":     "medium",
         "description":    "Low red blood cell count. Common in women of reproductive age, children, and seniors.",
         "recommendation": "Blood tests needed. Iron supplements, dietary changes, or treatment of underlying cause.",
@@ -193,6 +193,83 @@ RISK_COLORS = {
     "medium":   "#F7B731",
     "high":     "#E67E22",
     "critical": "#E63946",
+}
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  Family History
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Diseases with known hereditary / familial risk factors
+FAMILY_HISTORY_CONDITIONS = {
+    "fh_heart_disease":  {"label": "Heart Disease",       "icon": "❤️"},
+    "fh_diabetes":       {"label": "Diabetes",            "icon": "🩸"},
+    "fh_hypertension":   {"label": "Hypertension",        "icon": "💊"},
+    "fh_cancer":         {"label": "Cancer",              "icon": "🔬"},
+    "fh_asthma":         {"label": "Asthma",              "icon": "💨"},
+    "fh_migraine":       {"label": "Migraine",            "icon": "🧠"},
+    "fh_anemia":         {"label": "Anemia",              "icon": "🩺"},
+    "fh_thyroid":        {"label": "Thyroid Disorder",    "icon": "🦋"},
+    "fh_kidney_disease": {"label": "Kidney Disease",      "icon": "🫘"},
+    "fh_mental_illness": {"label": "Mental Illness",      "icon": "🧬"},
+    "fh_obesity":        {"label": "Obesity",             "icon": "⚖️"},
+    "fh_stroke":         {"label": "Stroke",              "icon": "⚡"},
+}
+
+# Risk multipliers: family_history_id → { disease_name: multiplier }
+# Kept lower than CONDITION_DISEASE_RISK (personal history) since these are
+# inherited predispositions, not current diagnoses.
+FAMILY_HISTORY_RISK = {
+    "fh_heart_disease":  {
+        "Heart Attack":      1.45,
+        "Hypertension":      1.25,
+        "Anemia":            1.10,
+    },
+    "fh_diabetes":       {
+        "Diabetes (Type 2)": 1.50,
+        "Hypertension":      1.20,
+        "Heart Attack":      1.20,
+    },
+    "fh_hypertension":   {
+        "Hypertension":      1.40,
+        "Heart Attack":      1.25,
+        "Anemia":            1.10,
+    },
+    "fh_cancer":         {
+        "Anemia":            1.20,
+        "Pneumonia":         1.15,
+    },
+    "fh_asthma":         {
+        "Asthma":            1.40,
+        "Pneumonia":         1.15,
+        "Common Cold":       1.10,
+    },
+    "fh_migraine":       {
+        "Migraine":          1.50,
+    },
+    "fh_anemia":         {
+        "Anemia":            1.40,
+    },
+    "fh_thyroid":        {
+        "Diabetes (Type 2)": 1.10,
+        "Anemia":            1.15,
+        "Hypertension":      1.10,
+    },
+    "fh_kidney_disease": {
+        "Hypertension":      1.20,
+        "Anemia":            1.25,
+        "Diabetes (Type 2)": 1.15,
+    },
+    "fh_mental_illness": {},   # no physical disease overlap — handled by mental module
+    "fh_obesity":        {
+        "Diabetes (Type 2)": 1.25,
+        "Hypertension":      1.20,
+        "Heart Attack":      1.15,
+        "Asthma":            1.10,
+    },
+    "fh_stroke":         {
+        "Heart Attack":      1.35,
+        "Hypertension":      1.30,
+    },
 }
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -247,61 +324,91 @@ VITALS_RANGES = {
     "heart_rate": {
         "label": "Heart Rate", "unit": "bpm",
         "ranges": [
-            {"label": "Critical Low",        "min": 0,   "max": 39,    "status": "critical", "color": "#E63946"},
-            {"label": "Low",                 "min": 40,  "max": 59,    "status": "warning",  "color": "#F7B731"},
-            {"label": "Normal",              "min": 60,  "max": 100,   "status": "normal",   "color": "#02C39A"},
-            {"label": "Elevated",            "min": 101, "max": 120,   "status": "warning",  "color": "#F7B731"},
-            {"label": "Critical High",       "min": 121, "max": 9999,  "status": "critical", "color": "#E63946"},
+            {"label": "Critical Low",        "min": 0,   "max": 39,
+                "status": "critical", "color": "#E63946"},
+            {"label": "Low",                 "min": 40,  "max": 59,
+                "status": "warning",  "color": "#F7B731"},
+            {"label": "Normal",              "min": 60,  "max": 100,
+                "status": "normal",   "color": "#02C39A"},
+            {"label": "Elevated",            "min": 101, "max": 120,
+                "status": "warning",  "color": "#F7B731"},
+            {"label": "Critical High",       "min": 121, "max": 9999,
+                "status": "critical", "color": "#E63946"},
         ],
     },
     "systolic_bp": {
         "label": "Systolic BP", "unit": "mmHg",
         "ranges": [
-            {"label": "Hypotension",         "min": 0,   "max": 89,    "status": "warning",  "color": "#F7B731"},
-            {"label": "Normal",              "min": 90,  "max": 119,   "status": "normal",   "color": "#02C39A"},
-            {"label": "Elevated",            "min": 120, "max": 129,   "status": "warning",  "color": "#F7B731"},
-            {"label": "High – Stage 1",      "min": 130, "max": 139,   "status": "warning",  "color": "#E67E22"},
-            {"label": "High – Stage 2",      "min": 140, "max": 179,   "status": "danger",   "color": "#E63946"},
-            {"label": "Hypertensive Crisis", "min": 180, "max": 9999,  "status": "critical", "color": "#E63946"},
+            {"label": "Hypotension",         "min": 0,   "max": 89,
+                "status": "warning",  "color": "#F7B731"},
+            {"label": "Normal",              "min": 90,  "max": 119,
+                "status": "normal",   "color": "#02C39A"},
+            {"label": "Elevated",            "min": 120, "max": 129,
+                "status": "warning",  "color": "#F7B731"},
+            {"label": "High – Stage 1",      "min": 130, "max": 139,
+                "status": "warning",  "color": "#E67E22"},
+            {"label": "High – Stage 2",      "min": 140, "max": 179,
+                "status": "danger",   "color": "#E63946"},
+            {"label": "Hypertensive Crisis", "min": 180, "max": 9999,
+                "status": "critical", "color": "#E63946"},
         ],
     },
     "diastolic_bp": {
         "label": "Diastolic BP", "unit": "mmHg",
         "ranges": [
-            {"label": "Hypotension",         "min": 0,   "max": 59,    "status": "warning",  "color": "#F7B731"},
-            {"label": "Normal",              "min": 60,  "max": 79,    "status": "normal",   "color": "#02C39A"},
-            {"label": "Elevated",            "min": 80,  "max": 89,    "status": "warning",  "color": "#E67E22"},
-            {"label": "High",                "min": 90,  "max": 119,   "status": "danger",   "color": "#E63946"},
-            {"label": "Hypertensive Crisis", "min": 120, "max": 9999,  "status": "critical", "color": "#E63946"},
+            {"label": "Hypotension",         "min": 0,   "max": 59,
+                "status": "warning",  "color": "#F7B731"},
+            {"label": "Normal",              "min": 60,  "max": 79,
+                "status": "normal",   "color": "#02C39A"},
+            {"label": "Elevated",            "min": 80,  "max": 89,
+                "status": "warning",  "color": "#E67E22"},
+            {"label": "High",                "min": 90,  "max": 119,
+                "status": "danger",   "color": "#E63946"},
+            {"label": "Hypertensive Crisis", "min": 120, "max": 9999,
+                "status": "critical", "color": "#E63946"},
         ],
     },
     "temperature": {
         "label": "Body Temperature", "unit": "°F",
         "ranges": [
-            {"label": "Hypothermia",         "min": 0,    "max": 95.9,  "status": "critical", "color": "#E63946"},
-            {"label": "Low Normal",          "min": 96.0, "max": 97.9,  "status": "warning",  "color": "#F7B731"},
-            {"label": "Normal",              "min": 98.0, "max": 99.0,  "status": "normal",   "color": "#02C39A"},
-            {"label": "Low Fever",           "min": 99.1, "max": 100.3, "status": "warning",  "color": "#F7B731"},
-            {"label": "Fever",               "min": 100.4,"max": 103.0, "status": "danger",   "color": "#E67E22"},
-            {"label": "High Fever",          "min": 103.1,"max": 9999,  "status": "critical", "color": "#E63946"},
+            {"label": "Hypothermia",         "min": 0,    "max": 95.9,
+                "status": "critical", "color": "#E63946"},
+            {"label": "Low Normal",          "min": 96.0, "max": 97.9,
+                "status": "warning",  "color": "#F7B731"},
+            {"label": "Normal",              "min": 98.0, "max": 99.0,
+                "status": "normal",   "color": "#02C39A"},
+            {"label": "Low Fever",           "min": 99.1, "max": 100.3,
+                "status": "warning",  "color": "#F7B731"},
+            {"label": "Fever",               "min": 100.4,
+                "max": 103.0, "status": "danger",   "color": "#E67E22"},
+            {"label": "High Fever",          "min": 103.1, "max": 9999,
+                "status": "critical", "color": "#E63946"},
         ],
     },
     "spo2": {
         "label": "Oxygen Saturation", "unit": "%",
         "ranges": [
-            {"label": "Critical",            "min": 0,   "max": 89,    "status": "critical", "color": "#E63946"},
-            {"label": "Low",                 "min": 90,  "max": 93,    "status": "danger",   "color": "#E67E22"},
-            {"label": "Below Normal",        "min": 94,  "max": 95,    "status": "warning",  "color": "#F7B731"},
-            {"label": "Normal",              "min": 96,  "max": 100,   "status": "normal",   "color": "#02C39A"},
+            {"label": "Critical",            "min": 0,   "max": 89,
+                "status": "critical", "color": "#E63946"},
+            {"label": "Low",                 "min": 90,  "max": 93,
+                "status": "danger",   "color": "#E67E22"},
+            {"label": "Below Normal",        "min": 94,  "max": 95,
+                "status": "warning",  "color": "#F7B731"},
+            {"label": "Normal",              "min": 96,  "max": 100,
+                "status": "normal",   "color": "#02C39A"},
         ],
     },
     "respiratory_rate": {
         "label": "Respiratory Rate", "unit": "breaths/min",
         "ranges": [
-            {"label": "Low",                 "min": 0,   "max": 11,    "status": "warning",  "color": "#F7B731"},
-            {"label": "Normal",              "min": 12,  "max": 20,    "status": "normal",   "color": "#02C39A"},
-            {"label": "Elevated",            "min": 21,  "max": 24,    "status": "warning",  "color": "#E67E22"},
-            {"label": "High",                "min": 25,  "max": 9999,  "status": "critical", "color": "#E63946"},
+            {"label": "Low",                 "min": 0,   "max": 11,
+                "status": "warning",  "color": "#F7B731"},
+            {"label": "Normal",              "min": 12,  "max": 20,
+                "status": "normal",   "color": "#02C39A"},
+            {"label": "Elevated",            "min": 21,  "max": 24,
+                "status": "warning",  "color": "#E67E22"},
+            {"label": "High",                "min": 25,  "max": 9999,
+                "status": "critical", "color": "#E63946"},
         ],
     },
 }
@@ -309,12 +416,20 @@ VITALS_RANGES = {
 # Vitals that trigger immediate emergency alerts
 # (vital_key, direction, threshold, message)
 VITALS_EMERGENCY = [
-    ("spo2",             "max", 89,    "Oxygen saturation critically low (<90%). Risk of hypoxia — seek emergency care immediately."),
-    ("spo2",             "max", 93,    "Oxygen saturation below safe level (<94%). Monitor closely and consider immediate medical attention."),
-    ("systolic_bp",      "min", 180,   "Blood pressure dangerously high (hypertensive crisis ≥180). Call emergency services immediately."),
-    ("diastolic_bp",     "min", 120,   "Diastolic BP critically high (≥120 mmHg). Hypertensive crisis — seek emergency care now."),
-    ("temperature",      "min", 103.1, "Dangerously high fever (>103°F / 39.5°C). Seek immediate medical attention."),
-    ("heart_rate",       "max", 39,    "Heart rate critically low (<40 bpm). Possible bradycardia — seek emergency care."),
-    ("heart_rate",       "min", 150,   "Heart rate dangerously high (>150 bpm). Seek emergency care immediately."),
-    ("respiratory_rate", "min", 30,    "Respiratory rate severely elevated (≥30). Possible respiratory distress — seek emergency care."),
+    ("spo2",             "max", 89,
+     "Oxygen saturation critically low (<90%). Risk of hypoxia — seek emergency care immediately."),
+    ("spo2",             "max", 93,
+     "Oxygen saturation below safe level (<94%). Monitor closely and consider immediate medical attention."),
+    ("systolic_bp",      "min", 180,
+     "Blood pressure dangerously high (hypertensive crisis ≥180). Call emergency services immediately."),
+    ("diastolic_bp",     "min", 120,
+     "Diastolic BP critically high (≥120 mmHg). Hypertensive crisis — seek emergency care now."),
+    ("temperature",      "min", 103.1,
+     "Dangerously high fever (>103°F / 39.5°C). Seek immediate medical attention."),
+    ("heart_rate",       "max", 39,
+     "Heart rate critically low (<40 bpm). Possible bradycardia — seek emergency care."),
+    ("heart_rate",       "min", 150,
+     "Heart rate dangerously high (>150 bpm). Seek emergency care immediately."),
+    ("respiratory_rate", "min", 30,
+     "Respiratory rate severely elevated (≥30). Possible respiratory distress — seek emergency care."),
 ]

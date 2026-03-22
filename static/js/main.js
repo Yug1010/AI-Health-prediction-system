@@ -7,24 +7,26 @@
 
 // ── State ─────────────────────────────────────────────────────────────────────
 const state = {
-  allSymptoms:    [],
-  allCategories:  {},
-  preexistingOpts:[],
-  selected:       new Set(),
-  selectedPreex:  new Set(),
-  gaugeChart:     null,
-  explainChart:   null,
-  vitalsRanges:   null,   // fetched from backend meta
+  allSymptoms: [],
+  allCategories: {},
+  preexistingOpts: [],
+  familyHistoryOpts: [],
+  selected: new Set(),
+  selectedPreex: new Set(),
+  selectedFamilyHist: new Set(),
+  gaugeChart: null,
+  explainChart: null,
+  vitalsRanges: null,
 };
 
 // Vitals ranges (mirrored client-side for instant feedback)
 const VITALS_RANGES_CLIENT = {
-  heart_rate:       [[0,39,"critical","#E63946"],[40,59,"warning","#F7B731"],[60,100,"normal","#02C39A"],[101,120,"warning","#F7B731"],[121,9999,"critical","#E63946"]],
-  systolic_bp:      [[0,89,"warning","#F7B731"],[90,119,"normal","#02C39A"],[120,129,"warning","#F7B731"],[130,139,"warning","#E67E22"],[140,179,"danger","#E63946"],[180,9999,"critical","#E63946"]],
-  diastolic_bp:     [[0,59,"warning","#F7B731"],[60,79,"normal","#02C39A"],[80,89,"warning","#E67E22"],[90,119,"danger","#E63946"],[120,9999,"critical","#E63946"]],
-  temperature:      [[0,95.9,"critical","#E63946"],[96,97.9,"warning","#F7B731"],[98,99,"normal","#02C39A"],[99.1,100.3,"warning","#F7B731"],[100.4,103,"danger","#E67E22"],[103.1,9999,"critical","#E63946"]],
-  spo2:             [[0,89,"critical","#E63946"],[90,93,"danger","#E67E22"],[94,95,"warning","#F7B731"],[96,100,"normal","#02C39A"]],
-  respiratory_rate: [[0,11,"warning","#F7B731"],[12,20,"normal","#02C39A"],[21,24,"warning","#E67E22"],[25,9999,"critical","#E63946"]],
+  heart_rate: [[0, 39, "critical", "#E63946"], [40, 59, "warning", "#F7B731"], [60, 100, "normal", "#02C39A"], [101, 120, "warning", "#F7B731"], [121, 9999, "critical", "#E63946"]],
+  systolic_bp: [[0, 89, "warning", "#F7B731"], [90, 119, "normal", "#02C39A"], [120, 129, "warning", "#F7B731"], [130, 139, "warning", "#E67E22"], [140, 179, "danger", "#E63946"], [180, 9999, "critical", "#E63946"]],
+  diastolic_bp: [[0, 59, "warning", "#F7B731"], [60, 79, "normal", "#02C39A"], [80, 89, "warning", "#E67E22"], [90, 119, "danger", "#E63946"], [120, 9999, "critical", "#E63946"]],
+  temperature: [[0, 95.9, "critical", "#E63946"], [96, 97.9, "warning", "#F7B731"], [98, 99, "normal", "#02C39A"], [99.1, 100.3, "warning", "#F7B731"], [100.4, 103, "danger", "#E67E22"], [103.1, 9999, "critical", "#E63946"]],
+  spo2: [[0, 89, "critical", "#E63946"], [90, 93, "danger", "#E67E22"], [94, 95, "warning", "#F7B731"], [96, 100, "normal", "#02C39A"]],
+  respiratory_rate: [[0, 11, "warning", "#F7B731"], [12, 20, "normal", "#02C39A"], [21, 24, "warning", "#E67E22"], [25, 9999, "critical", "#E63946"]],
 };
 const VITALS_LABELS = {
   heart_rate: "Normal: 60–100 bpm", systolic_bp: "Normal: 90–119 mmHg",
@@ -35,30 +37,32 @@ const VITALS_LABELS = {
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
 
-const searchInput     = $("symptom-search");
-const searchResults   = $("search-results");
-const selectedTags    = $("selected-tags");
-const selectedCount   = $("selected-count");
-const clearBtn        = $("clear-btn");
+const searchInput = $("symptom-search");
+const searchResults = $("search-results");
+const selectedTags = $("selected-tags");
+const selectedCount = $("selected-count");
+const clearBtn = $("clear-btn");
 const categoriesPanel = $("categories-panel");
-const toggleCats      = $("toggle-categories");
-const analyseBtn      = $("analyse-btn");
-const emptyState      = $("empty-state");
-const loadingState    = $("loading-state");
-const resultsContent  = $("results-content");
-const emergencyAlert  = $("emergency-alert");
-const riskNumber      = $("risk-number");
-const riskLabelBadge  = $("risk-label-badge");
-const confidenceLbl   = $("confidence-label");
+const toggleCats = $("toggle-categories");
+const analyseBtn = $("analyse-btn");
+const emptyState = $("empty-state");
+const loadingState = $("loading-state");
+const resultsContent = $("results-content");
+const emergencyAlert = $("emergency-alert");
+const riskNumber = $("risk-number");
+const riskLabelBadge = $("risk-label-badge");
+const confidenceLbl = $("confidence-label");
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 async function init() {
-  const res  = await fetch("/api/meta");
+  const res = await fetch("/api/meta");
   const data = await res.json();
-  state.allSymptoms    = data.all_symptoms;
-  state.allCategories  = data.categories;
-  state.preexistingOpts= data.preexisting;
+  state.allSymptoms = data.all_symptoms;
+  state.allCategories = data.categories;
+  state.preexistingOpts = data.preexisting;
+  state.familyHistoryOpts = data.family_history;
   buildPreexisting();
+  buildFamilyHistory();
   buildCategories();
   setupVitalsListeners();
   setupValidation();
@@ -70,7 +74,7 @@ function setupValidation() {
 }
 function updateAnalyseBtn() {
   const age = parseInt($("input-age").value);
-  const ok  = age >= 1 && age <= 120 && state.selected.size >= 2;
+  const ok = age >= 1 && age <= 120 && state.selected.size >= 2;
   analyseBtn.disabled = !ok;
 }
 
@@ -80,9 +84,9 @@ function buildPreexisting() {
   wrap.innerHTML = "";
   state.preexistingOpts.forEach(c => {
     const chip = document.createElement("button");
-    chip.className   = "cond-chip";
-    chip.dataset.id  = c.id;
-    chip.innerHTML   = `<span class="chip-icon">${c.icon}</span>${c.label}`;
+    chip.className = "cond-chip";
+    chip.dataset.id = c.id;
+    chip.innerHTML = `<span class="chip-icon">${c.icon}</span>${c.label}`;
     chip.addEventListener("click", () => {
       if (state.selectedPreex.has(c.id)) state.selectedPreex.delete(c.id);
       else state.selectedPreex.add(c.id);
@@ -92,15 +96,34 @@ function buildPreexisting() {
   });
 }
 
+// ── Family history chips ───────────────────────────────────────────────────
+function buildFamilyHistory() {
+  const wrap = $("family-history-chips");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  state.familyHistoryOpts.forEach(c => {
+    const chip = document.createElement("button");
+    chip.className = "cond-chip fh-chip";
+    chip.dataset.id = c.id;
+    chip.innerHTML = `<span class="chip-icon">${c.icon}</span>${c.label}`;
+    chip.addEventListener("click", () => {
+      if (state.selectedFamilyHist.has(c.id)) state.selectedFamilyHist.delete(c.id);
+      else state.selectedFamilyHist.add(c.id);
+      chip.classList.toggle("selected", state.selectedFamilyHist.has(c.id));
+    });
+    wrap.appendChild(chip);
+  });
+}
+
 // ── Vitals live feedback ───────────────────────────────────────────────────
 function setupVitalsListeners() {
   const map = {
-    "v-hr":   { key: "heart_rate",       pill: "v-hr-status"   },
-    "v-sys":  { key: "systolic_bp",      pill: "v-bp-status"   },
-    "v-dia":  { key: "diastolic_bp",     pill: "v-bp-status"   },
-    "v-temp": { key: "temperature",      pill: "v-temp-status" },
-    "v-spo2": { key: "spo2",             pill: "v-spo2-status" },
-    "v-rr":   { key: "respiratory_rate", pill: "v-rr-status"   },
+    "v-hr": { key: "heart_rate", pill: "v-hr-status" },
+    "v-sys": { key: "systolic_bp", pill: "v-bp-status" },
+    "v-dia": { key: "diastolic_bp", pill: "v-bp-status" },
+    "v-temp": { key: "temperature", pill: "v-temp-status" },
+    "v-spo2": { key: "spo2", pill: "v-spo2-status" },
+    "v-rr": { key: "respiratory_rate", pill: "v-rr-status" },
   };
   Object.entries(map).forEach(([inputId, { key, pill }]) => {
     $(inputId).addEventListener("input", () => {
@@ -108,11 +131,11 @@ function setupVitalsListeners() {
       if (!val) { $(pill).textContent = ""; $(pill).style.background = ""; return; }
       const status = getVitalStatus(key, val);
       const pillEl = $(pill);
-      pillEl.textContent        = status.label;
-      pillEl.style.background   = status.color + "20";
-      pillEl.style.color        = status.color;
-      pillEl.style.border       = `1px solid ${status.color}50`;
-      pillEl.style.padding      = ".15rem .5rem";
+      pillEl.textContent = status.label;
+      pillEl.style.background = status.color + "20";
+      pillEl.style.color = status.color;
+      pillEl.style.border = `1px solid ${status.color}50`;
+      pillEl.style.padding = ".15rem .5rem";
       pillEl.style.borderRadius = "50px";
     });
   });
@@ -142,8 +165,8 @@ function buildCategories() {
     const chips = group.querySelector(".category-chips");
     symptoms.forEach(s => {
       const chip = document.createElement("button");
-      chip.className   = "cat-chip";
-      chip.dataset.id  = s.id;
+      chip.className = "cat-chip";
+      chip.dataset.id = s.id;
       chip.textContent = s.label;
       if (state.selected.has(s.id)) chip.classList.add("selected");
       chip.addEventListener("click", () => toggleSymptom(s.id));
@@ -213,9 +236,9 @@ function updateTagsUI() {
   }
   selectedTags.innerHTML = "";
   state.selected.forEach(id => {
-    const sym   = state.allSymptoms.find(s => s.id === id);
+    const sym = state.allSymptoms.find(s => s.id === id);
     const label = sym ? sym.label : id;
-    const tag   = document.createElement("span");
+    const tag = document.createElement("span");
     tag.className = "symptom-tag";
     tag.innerHTML = `${label} <span class="tag-remove" data-id="${id}">✕</span>`;
     tag.querySelector(".tag-remove").addEventListener("click", () => {
@@ -248,8 +271,8 @@ async function runAnalysis() {
   // Gather vitals
   const vitals = {};
   const vmap = {
-    "v-hr":  "heart_rate", "v-sys": "systolic_bp", "v-dia": "diastolic_bp",
-    "v-temp":"temperature","v-spo2":"spo2",          "v-rr": "respiratory_rate",
+    "v-hr": "heart_rate", "v-sys": "systolic_bp", "v-dia": "diastolic_bp",
+    "v-temp": "temperature", "v-spo2": "spo2", "v-rr": "respiratory_rate",
   };
   for (const [inputId, key] of Object.entries(vmap)) {
     const val = $(`${inputId}`).value;
@@ -257,18 +280,19 @@ async function runAnalysis() {
   }
 
   const payload = {
-    symptoms:    [...state.selected],
-    age:         parseInt($("input-age").value) || null,
-    gender:      $("input-gender").value || null,
+    symptoms: [...state.selected],
+    age: parseInt($("input-age").value) || null,
+    gender: $("input-gender").value || null,
     preexisting: [...state.selectedPreex],
+    family_history: [...state.selectedFamilyHist],
     vitals,
   };
 
   try {
-    const res  = await fetch("/api/predict", {
-      method:  "POST",
+    const res = await fetch("/api/predict", {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify(payload),
+      body: JSON.stringify(payload),
     });
     const data = await res.json();
     if (!res.ok) { alert(data.error || "Analysis failed."); showEmptyState(); return; }
@@ -303,11 +327,11 @@ function renderResults(data) {
 
   // Risk score
   animateNumber(riskNumber, 0, data.risk_score, 900);
-  riskLabelBadge.textContent   = data.risk_label;
+  riskLabelBadge.textContent = data.risk_label;
   riskLabelBadge.style.background = riskColor(data.risk_label);
-  riskLabelBadge.style.color      = "#fff";
-  confidenceLbl.textContent    = data.confidence_label;
-  confidenceLbl.style.color    = data.confidence_color;
+  riskLabelBadge.style.color = "#fff";
+  confidenceLbl.textContent = data.confidence_label;
+  confidenceLbl.style.color = data.confidence_color;
   drawGauge(data.risk_score, data.risk_label);
 
   // Vitals results
@@ -315,6 +339,9 @@ function renderResults(data) {
 
   // Preexisting impact
   renderPreexistingImpact(data.preexisting_impact);
+
+  // Family history impact
+  renderFamilyHistoryImpact(data.family_history_impact);
 
   // Predictions
   renderPredictions(data.predictions);
@@ -325,16 +352,19 @@ function renderResults(data) {
 
 // ── Patient summary bar ────────────────────────────────────────────────────
 function renderPatientSummary(profile) {
-  const bar  = $("patient-summary-bar");
-  const pills= [];
+  const bar = $("patient-summary-bar");
+  const pills = [];
   if (profile.age) {
-    const grpLabel = {"child":"Child (≤17)","adult":"Adult (18–59)","senior":"Senior (60+)"}[profile.age_group] || "";
+    const grpLabel = { "child": "Child (≤17)", "adult": "Adult (18–59)", "senior": "Senior (60+)" }[profile.age_group] || "";
     pills.push(`<span class="profile-pill">👤 Age ${profile.age} · ${grpLabel}</span>`);
   }
   if (profile.gender && profile.gender !== "prefer_not")
     pills.push(`<span class="profile-pill">${profile.gender}</span>`);
   profile.preexisting.forEach(p =>
     pills.push(`<span class="profile-pill">${p.icon} ${p.label}</span>`)
+  );
+  (profile.family_history || []).forEach(f =>
+    pills.push(`<span class="profile-pill" style="background:rgba(108,92,231,.12);color:#6C5CE7;border:1px solid rgba(108,92,231,.25)">🧬 Fam: ${f.label}</span>`)
   );
   bar.innerHTML = pills.length
     ? `<strong style="color:var(--teal);margin-right:.4rem">Profile:</strong>${pills.join("")}`
@@ -368,11 +398,25 @@ function renderVitalsResults(summary) {
 // ── Preexisting impact ─────────────────────────────────────────────────────
 function renderPreexistingImpact(notes) {
   const panel = $("preexisting-panel");
-  const list  = $("preexisting-impact-list");
+  const list = $("preexisting-impact-list");
   if (!notes || notes.length === 0) { panel.classList.add("hidden"); return; }
   panel.classList.remove("hidden");
   list.innerHTML = notes.map(n =>
     `<div class="impact-note">⚠️ ${n}</div>`
+  ).join("");
+}
+
+// ── Family history impact ──────────────────────────────────────────────────
+function renderFamilyHistoryImpact(notes) {
+  const panel = $("family-history-panel");
+  const list = $("family-history-impact-list");
+  if (!panel || !notes || notes.length === 0) {
+    if (panel) panel.classList.add("hidden");
+    return;
+  }
+  panel.classList.remove("hidden");
+  list.innerHTML = notes.map(n =>
+    `<div class="impact-note fh-impact-note">🧬 ${n}</div>`
   ).join("");
 }
 
@@ -388,6 +432,8 @@ function renderPredictions(predictions) {
       badges.push(`<span class="mod-badge">${p.age_modifier_label}</span>`);
     if (p.preexisting_boost && p.preexisting_boost > 1.05)
       badges.push(`<span class="mod-badge boost">⚕️ Boosted by preexisting conditions (×${p.preexisting_boost})</span>`);
+    if (p.family_history_boost && p.family_history_boost > 1.05)
+      badges.push(`<span class="mod-badge fh-boost">🧬 Elevated by family history (×${p.family_history_boost})</span>`);
 
     card.innerHTML = `
       <div class="pred-accent-bar" style="background:${p.risk_color}"></div>
@@ -424,12 +470,18 @@ function drawGauge(score, label) {
   const color = riskColor(label);
   state.gaugeChart = new Chart(ctx, {
     type: "doughnut",
-    data: { datasets: [{ data: [score, 100-score],
-      backgroundColor: [color, "rgba(255,255,255,.12)"],
-      borderWidth: 0, circumference: 270, rotation: -135 }] },
-    options: { responsive: false, cutout: "72%",
+    data: {
+      datasets: [{
+        data: [score, 100 - score],
+        backgroundColor: [color, "rgba(255,255,255,.12)"],
+        borderWidth: 0, circumference: 270, rotation: -135
+      }]
+    },
+    options: {
+      responsive: false, cutout: "72%",
       plugins: { legend: { display: false }, tooltip: { enabled: false } },
-      animation: { duration: 1000, easing: "easeOutQuart" } },
+      animation: { duration: 1000, easing: "easeOutQuart" }
+    },
   });
   $("gauge-label").textContent = label;
 }
@@ -440,18 +492,22 @@ function renderExplainChart(contributions) {
   if (state.explainChart) state.explainChart.destroy();
   const labels = contributions.map(c => c.symptom);
   const values = contributions.map(c => c.contribution);
-  const max    = Math.max(...values) || 1;
-  const colors = values.map(v => `rgba(2,128,144,${0.3 + (v/max)*0.7})`);
+  const max = Math.max(...values) || 1;
+  const colors = values.map(v => `rgba(2,128,144,${0.3 + (v / max) * 0.7})`);
   state.explainChart = new Chart(ctx, {
     type: "bar",
-    data: { labels, datasets: [{
-      label: "Influence (%)", data: values,
-      backgroundColor: colors, borderRadius: 6, borderWidth: 0,
-    }]},
+    data: {
+      labels, datasets: [{
+        label: "Influence (%)", data: values,
+        backgroundColor: colors, borderRadius: 6, borderWidth: 0,
+      }]
+    },
     options: {
       indexAxis: "y", responsive: true,
-      plugins: { legend: { display: false },
-        tooltip: { callbacks: { label: c => ` Influence: ${c.parsed.x.toFixed(2)}%` } } },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => ` Influence: ${c.parsed.x.toFixed(2)}%` } }
+      },
       scales: {
         x: { beginAtZero: true, grid: { color: "rgba(0,0,0,.05)" }, ticks: { font: { size: 11 } } },
         y: { grid: { display: false }, ticks: { font: { size: 12 } } },
@@ -463,17 +519,17 @@ function renderExplainChart(contributions) {
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function riskColor(label) {
-  return { Critical:"#E63946", High:"#E67E22", Medium:"#F7B731", Low:"#02C39A" }[label] || "#64748B";
+  return { Critical: "#E63946", High: "#E67E22", Medium: "#F7B731", Low: "#02C39A" }[label] || "#64748B";
 }
 function animateNumber(el, from, to, duration) {
   const start = performance.now();
   (function step(now) {
-    const t = Math.min((now-start)/duration,1);
-    el.textContent = Math.round(from + (to-from) * easeOut(t));
+    const t = Math.min((now - start) / duration, 1);
+    el.textContent = Math.round(from + (to - from) * easeOut(t));
     if (t < 1) requestAnimationFrame(step);
   })(performance.now());
 }
-function easeOut(t) { return 1 - Math.pow(1-t, 4); }
+function easeOut(t) { return 1 - Math.pow(1 - t, 4); }
 
 // ── Start ──────────────────────────────────────────────────────────────────
 init();

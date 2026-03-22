@@ -1,3 +1,8 @@
+"""
+HealthMind AI – Flask Backend (v2)
+Start:  python app.py
+Open:   http://127.0.0.1:5000
+"""
 
 import os
 import pickle
@@ -9,6 +14,7 @@ from data.disease_symptoms import (
     DISEASES, EMERGENCY_COMBINATIONS, RISK_COLORS,
     PREEXISTING_CONDITIONS, CONDITION_DISEASE_RISK,
     VITALS_RANGES, VITALS_EMERGENCY,
+    FAMILY_HISTORY_CONDITIONS, FAMILY_HISTORY_RISK,
 )
 
 app = Flask(__name__)
@@ -94,8 +100,39 @@ def apply_preexisting_modifiers(predictions: list, conditions: list) -> tuple[li
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  Helper – Vitals analysis
+#  Helper – Family history modifiers
 # ══════════════════════════════════════════════════════════════════════════════
+
+def apply_family_history_modifiers(predictions: list, family_history: list) -> tuple[list, list]:
+    """
+    Boost prediction probabilities for diseases linked to the patient's
+    family history.  Multipliers are intentionally lower than personal
+    preexisting conditions — family history indicates elevated predisposition,
+    not a current diagnosis.
+    Returns updated predictions + human-readable impact notes.
+    """
+    impact_notes = []
+    for p in predictions:
+        disease = p["condition"]
+        total_mult = 1.0
+        reasons = []
+        for fh_id in family_history:
+            boosts = FAMILY_HISTORY_RISK.get(fh_id, {})
+            mult = boosts.get(disease, 1.0)
+            if mult > 1.0:
+                label = FAMILY_HISTORY_CONDITIONS[fh_id]["label"]
+                reasons.append(f"Family {label} (+{round((mult - 1) * 100)}%)")
+                total_mult *= mult
+        if total_mult > 1.0:
+            p["probability"] = round(
+                min(99.9, p["probability"] * total_mult), 1)
+            note = f"{disease} risk elevated due to: {', '.join(reasons)}"
+            impact_notes.append(note)
+        p["family_history_boost"] = round(total_mult, 2)
+
+    predictions.sort(key=lambda x: x["probability"], reverse=True)
+    return predictions, impact_notes
+
 
 def _get_vital_status(key: str, value: float) -> dict:
     """Return the label, status, and color for a given vital value."""
@@ -157,13 +194,13 @@ def analyze_vitals(vitals: dict) -> dict:
 def calculate_risk_score(top: dict, n_symptoms: int,
                          vitals_bump: int = 0,
                          n_preexisting: int = 0,
-                         age: int | None = None) -> int:
+                         age: int | None = None,
+                         n_family_hist: int = 0) -> int:
     prob = top["probability"] / 100
     risk_map = {"low": 0.25, "medium": 0.50, "high": 0.75, "critical": 1.0}
     risk_weight = risk_map.get(top["risk_level"], 0.5)
     sym_weight = min(n_symptoms / 8, 1.0)
 
-    # Age modifier: children and seniors get a slight bump
     age_bump = 0
     if age is not None:
         if age <= 12 or age >= 70:
@@ -171,11 +208,12 @@ def calculate_risk_score(top: dict, n_symptoms: int,
         elif age <= 17 or age >= 60:
             age_bump = 4
 
-    # Preexisting bump
     prex_bump = min(n_preexisting * 4, 16)
+    # family history: gentler bump than personal history
+    fh_bump = min(n_family_hist * 2, 10)
 
     score = (prob * 0.50 + risk_weight * 0.35 + sym_weight * 0.15) * 100
-    score += vitals_bump + age_bump + prex_bump
+    score += vitals_bump + age_bump + prex_bump + fh_bump
     return min(100, round(score))
 
 
@@ -222,10 +260,15 @@ def api_meta():
         {"id": k, "label": v["label"], "icon": v["icon"]}
         for k, v in PREEXISTING_CONDITIONS.items()
     ]
+    family_history = [
+        {"id": k, "label": v["label"], "icon": v["icon"]}
+        for k, v in FAMILY_HISTORY_CONDITIONS.items()
+    ]
     return jsonify({
-        "all_symptoms": [{"id": s, "label": SYMPTOM_DISPLAY[s]} for s in SYMPTOMS],
-        "categories":   categories,
-        "preexisting":  preexisting,
+        "all_symptoms":   [{"id": s, "label": SYMPTOM_DISPLAY[s]} for s in SYMPTOMS],
+        "categories":     categories,
+        "preexisting":    preexisting,
+        "family_history": family_history,
     })
 
 
@@ -249,11 +292,12 @@ def api_predict():
       }
     """
     body = request.get_json(force=True)
-    selected = body.get("symptoms",    [])
-    age = body.get("age",         None)
-    gender = body.get("gender",      None)
-    preexisting = body.get("preexisting", [])
-    vitals_raw = body.get("vitals",      {})
+    selected = body.get("symptoms",       [])
+    age = body.get("age",            None)
+    gender = body.get("gender",         None)
+    preexisting = body.get("preexisting",    [])
+    family_history = body.get("family_history", [])
+    vitals_raw = body.get("vitals",         {})
 
     # ── Validation ────────────────────────────────────────────────────────────
     if not selected:
@@ -286,17 +330,18 @@ def api_predict():
         if prob < 0.5:
             continue
         predictions.append({
-            "condition":        name,
-            "probability":      prob,
-            "risk_level":       info.get("risk_level", "unknown"),
-            "risk_color":       RISK_COLORS.get(info.get("risk_level", ""), "#aaa"),
-            "description":      info.get("description", ""),
-            "recommendation":   info.get("recommendation", ""),
-            "emergency":        info.get("emergency", False),
-            "icon":             info.get("icon", "🏥"),
-            "age_modifier":     1.0,
-            "age_modifier_label": "",
-            "preexisting_boost":  1.0,
+            "condition":            name,
+            "probability":          prob,
+            "risk_level":           info.get("risk_level", "unknown"),
+            "risk_color":           RISK_COLORS.get(info.get("risk_level", ""), "#aaa"),
+            "description":          info.get("description", ""),
+            "recommendation":       info.get("recommendation", ""),
+            "emergency":            info.get("emergency", False),
+            "icon":                 info.get("icon", "🏥"),
+            "age_modifier":         1.0,
+            "age_modifier_label":   "",
+            "preexisting_boost":    1.0,
+            "family_history_boost": 1.0,
         })
 
     if not predictions:
@@ -312,6 +357,12 @@ def api_predict():
         predictions, preexisting_impact = apply_preexisting_modifiers(
             predictions, preexisting)
 
+    # ── Apply family history modifiers ────────────────────────────────────────
+    family_history_impact = []
+    if family_history:
+        predictions, family_history_impact = apply_family_history_modifiers(
+            predictions, family_history)
+
     # Keep top 3 after re-sorting
     predictions = predictions[:3]
 
@@ -325,6 +376,7 @@ def api_predict():
         vitals_bump=vitals_analysis["risk_bump"],
         n_preexisting=len(preexisting),
         age=int(age) if age else None,
+        n_family_hist=len(family_history),
     )
     risk_label = get_risk_label(risk_score)
 
@@ -361,29 +413,35 @@ def api_predict():
 
     # ── Patient profile summary ───────────────────────────────────────────────
     patient_profile = {
-        "age":          age,
-        "age_group":    age_group(int(age)) if age else None,
-        "gender":       gender,
-        "preexisting":  [
+        "age":            age,
+        "age_group":      age_group(int(age)) if age else None,
+        "gender":         gender,
+        "preexisting":    [
             {"id": c, "label": PREEXISTING_CONDITIONS[c]["label"],
              "icon": PREEXISTING_CONDITIONS[c]["icon"]}
             for c in preexisting if c in PREEXISTING_CONDITIONS
         ],
+        "family_history": [
+            {"id": f, "label": FAMILY_HISTORY_CONDITIONS[f]["label"],
+             "icon": FAMILY_HISTORY_CONDITIONS[f]["icon"]}
+            for f in family_history if f in FAMILY_HISTORY_CONDITIONS
+        ],
     }
 
     return jsonify({
-        "predictions":         predictions,
-        "risk_score":          risk_score,
-        "risk_label":          risk_label,
-        "emergency":           any_emergency,
-        "emergency_messages":  emergency_messages,
-        "symptom_count":       len(selected),
-        "contributions":       contributions[:8],
-        "confidence_label":    confidence_label,
-        "confidence_color":    confidence_color,
-        "vitals_summary":      vitals_analysis["summary"],
-        "preexisting_impact":  preexisting_impact,
-        "patient_profile":     patient_profile,
+        "predictions":            predictions,
+        "risk_score":             risk_score,
+        "risk_label":             risk_label,
+        "emergency":              any_emergency,
+        "emergency_messages":     emergency_messages,
+        "symptom_count":          len(selected),
+        "contributions":          contributions[:8],
+        "confidence_label":       confidence_label,
+        "confidence_color":       confidence_color,
+        "vitals_summary":         vitals_analysis["summary"],
+        "preexisting_impact":     preexisting_impact,
+        "family_history_impact":  family_history_impact,
+        "patient_profile":        patient_profile,
     })
 
 
