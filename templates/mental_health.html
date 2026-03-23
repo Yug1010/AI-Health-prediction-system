@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,114 +9,117 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/mental_health.css') }}" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
+
 <body>
 
-<!-- ═══════════════════════════════════ HEADER ═══════════════════════════════ -->
-<header class="site-header">
-  <div class="header-inner">
-    <div class="logo">
-      <span class="logo-icon">🧠</span>
-      <div>
-        <span class="logo-name">HealthMind <span class="logo-ai">AI</span></span>
-        <span class="logo-tag">Mental Health Assessment</span>
-      </div>
-    </div>
-    <nav class="header-nav">
-      <a href="/" class="nav-link-pill">🫀 Physical Health</a>
-      <a href="/mental-health" class="nav-link-pill active-nav">🧠 Mental Health</a>
-      <span class="disclaimer-chip">⚠️ Not a clinical diagnosis</span>
-    </nav>
-  </div>
-</header>
-
-<!-- ═══════════════════════════════════ HERO ═════════════════════════════════ -->
-<section class="mh-hero">
-  <div class="mh-hero-content">
-    <div class="hero-badge">Confidential · Supportive · Non-Judgmental</div>
-    <h1>Mental Health<br /><span class="hero-accent">Self-Assessment</span></h1>
-    <p class="hero-sub">
-      Answer 20 simple questions about how you have been feeling over the
-      <strong>past 2 weeks</strong>. Your responses will generate a personalised
-      mental wellness score with insights and recommendations.
-    </p>
-    <div class="mh-hero-meta">
-      <span class="meta-chip">⏱️ ~3 minutes</span>
-      <span class="meta-chip">🔒 Private — nothing is stored</span>
-      <span class="meta-chip">📋 20 questions</span>
-    </div>
-    <a href="#assessment" class="btn-primary">Begin Assessment ↓</a>
-  </div>
-</section>
-
-<!-- ═══════════════════════════════ ASSESSMENT ═══════════════════════════════ -->
-<section class="mh-assessment" id="assessment">
-  <div class="mh-container">
-
-    <!-- ── Left: Form ────────────────────────────────────────────────────── -->
-    <div class="mh-form-col">
-
-      <!-- Profile strip -->
-      <div class="card mh-profile-card">
-        <h3 class="mh-card-title">👤 About You <span class="optional-tag">(optional)</span></h3>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="mh-age">Age</label>
-            <input type="number" id="mh-age" min="10" max="100" placeholder="e.g. 25" />
-          </div>
-          <div class="form-group">
-            <label for="mh-gender">Gender</label>
-            <select id="mh-gender">
-              <option value="">Select…</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other / Non-binary</option>
-              <option value="prefer_not">Prefer not to say</option>
-            </select>
-          </div>
+  <!-- ═══════════════════════════════════ HEADER ═══════════════════════════════ -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">🧠</span>
+        <div>
+          <span class="logo-name">HealthMind <span class="logo-ai">AI</span></span>
+          <span class="logo-tag">Mental Health Assessment</span>
         </div>
       </div>
+      <nav class="header-nav">
+        <a href="/" class="nav-link-pill">🫀 Physical Health</a>
+        <a href="/mental-health" class="nav-link-pill active-nav">🧠 Mental Health</a>
+        <span class="disclaimer-chip">⚠️ Not a clinical diagnosis</span>
+      </nav>
+    </div>
+  </header>
 
-      <!-- Answer scale legend -->
-      <div class="scale-legend">
-        <span class="scale-title">How often over the past 2 weeks:</span>
-        <div class="scale-chips">
-          <span class="scale-chip s0">0 – Not at all</span>
-          <span class="scale-chip s1">1 – Several days</span>
-          <span class="scale-chip s2">2 – More than half the days</span>
-          <span class="scale-chip s3">3 – Nearly every day</span>
-        </div>
+  <!-- ═══════════════════════════════════ HERO ═════════════════════════════════ -->
+  <section class="mh-hero">
+    <div class="mh-hero-content">
+      <div class="hero-badge">Confidential · Supportive · Non-Judgmental</div>
+      <h1>Mental Health<br /><span class="hero-accent">Self-Assessment</span></h1>
+      <p class="hero-sub">
+        Answer 20 simple questions about how you have been feeling over the
+        <strong>past 2 weeks</strong>. Your responses will generate a personalised
+        mental wellness score with insights and recommendations.
+      </p>
+      <div class="mh-hero-meta">
+        <span class="meta-chip">⏱️ ~3 minutes</span>
+        <span class="meta-chip">🔒 Private — nothing is stored</span>
+        <span class="meta-chip">📋 20 questions</span>
       </div>
+      <a href="#assessment" class="btn-primary">Begin Assessment ↓</a>
+    </div>
+  </section>
 
-      <!-- Questions — injected per domain by Jinja2 -->
-      {% set domains = [] %}
-      {% for q in questions %}
+  <!-- ═══════════════════════════════ ASSESSMENT ═══════════════════════════════ -->
+  <section class="mh-assessment" id="assessment">
+    <div class="mh-container">
+
+      <!-- ── Left: Form ────────────────────────────────────────────────────── -->
+      <div class="mh-form-col">
+
+        <!-- Profile strip -->
+        <div class="card mh-profile-card">
+          <h3 class="mh-card-title">👤 About You <span class="optional-tag">(optional)</span></h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="mh-age">Age</label>
+              <input type="number" id="mh-age" min="10" max="100" placeholder="e.g. 25" />
+            </div>
+            <div class="form-group">
+              <label for="mh-gender">Gender</label>
+              <select id="mh-gender">
+                <option value="">Select…</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other / Non-binary</option>
+                <option value="prefer_not">Prefer not to say</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Answer scale legend -->
+        <div class="scale-legend">
+          <span class="scale-title">How often over the past 2 weeks:</span>
+          <div class="scale-chips">
+            <span class="scale-chip s0">0 – Not at all</span>
+            <span class="scale-chip s1">1 – Several days</span>
+            <span class="scale-chip s2">2 – More than half the days</span>
+            <span class="scale-chip s3">3 – Nearly every day</span>
+          </div>
+        </div>
+
+        <!-- Questions — injected per domain by Jinja2 -->
+        {% set domains = [] %}
+        {% for q in questions %}
         {% if q.domain not in domains %}
-          {% if domains.append(q.domain) %}{% endif %}
+        {% if domains.append(q.domain) %}{% endif %}
         {% endif %}
-      {% endfor %}
+        {% endfor %}
 
-      {% set domain_icons = {
-        "Mood":     "😔",
-        "Anxiety":  "😰",
-        "Sleep":    "😴",
-        "Stress":   "😤",
-        "Social":   "🤝",
+        {% set domain_icons = {
+        "Mood": "😔",
+        "Anxiety": "😰",
+        "Sleep": "😴",
+        "Stress": "😤",
+        "Social": "🤝",
         "Physical": "🫁",
-        "Crisis":   "🆘"
-      } %}
+        "Crisis": "🆘"
+        } %}
 
-      {% set ns = namespace(current_domain="") %}
-      {% for q in questions %}
+        {% set ns = namespace(current_domain="") %}
+        {% for q in questions %}
 
         {% if q.domain != ns.current_domain %}
-          {% if ns.current_domain != "" %}</div></div>{% endif %}
-          {% set ns.current_domain = q.domain %}
-          <div class="card mh-domain-card {% if q.get('crisis') %}crisis-domain{% endif %}">
-            <div class="domain-header">
-              <span class="domain-icon">{{ domain_icons.get(q.domain, "❓") }}</span>
-              <h3 class="domain-title">{{ q.domain }}</h3>
-            </div>
-            <div class="questions-list">
+        {% if ns.current_domain != "" %}
+      </div>
+    </div>{% endif %}
+    {% set ns.current_domain = q.domain %}
+    <div class="card mh-domain-card {% if q.get('crisis') %}crisis-domain{% endif %}">
+      <div class="domain-header">
+        <span class="domain-icon">{{ domain_icons.get(q.domain, "❓") }}</span>
+        <h3 class="domain-title">{{ q.domain }}</h3>
+      </div>
+      <div class="questions-list">
         {% endif %}
 
         <div class="question-item {% if q.get('crisis') %}crisis-question{% endif %}" data-id="{{ q.id }}">
@@ -124,35 +128,33 @@
           </p>
           <div class="answer-buttons" role="group" aria-label="Answer for: {{ q.text }}">
             {% for val in [0, 1, 2, 3] %}
-            <button
-              class="ans-btn"
-              data-qid="{{ q.id }}"
-              data-val="{{ val }}"
-              aria-label="{{ ['Not at all','Several days','More than half','Nearly every day'][val] }}"
-            >{{ val }}</button>
+            <button class="ans-btn" data-qid="{{ q.id }}" data-val="{{ val }}"
+              aria-label="{{ ['Not at all','Several days','More than half','Nearly every day'][val] }}">{{ val
+              }}</button>
             {% endfor %}
           </div>
           <div class="answer-label" id="lbl-{{ q.id }}">— tap to answer</div>
         </div>
 
-      {% endfor %}
-      </div></div><!-- close last domain card -->
-
-      <!-- Progress & submit -->
-      <div class="mh-progress-bar-wrap">
-        <div class="mh-progress-info">
-          <span id="progress-text">0 of 20 answered</span>
-          <span id="progress-pct">0%</span>
-        </div>
-        <div class="mh-progress-track">
-          <div class="mh-progress-fill" id="progress-fill" style="width:0%"></div>
-        </div>
+        {% endfor %}
       </div>
+    </div><!-- close last domain card -->
 
-      <button id="mh-analyse-btn" class="btn-analyse" disabled>
-        <span class="btn-icon">🧠</span> Analyse My Responses
-      </button>
-      <p class="min-note">Please answer all 20 questions to continue</p>
+    <!-- Progress & submit -->
+    <div class="mh-progress-bar-wrap">
+      <div class="mh-progress-info">
+        <span id="progress-text">0 of 20 answered</span>
+        <span id="progress-pct">0%</span>
+      </div>
+      <div class="mh-progress-track">
+        <div class="mh-progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <button id="mh-analyse-btn" class="btn-analyse" disabled>
+      <span class="btn-icon">🧠</span> Analyse My Responses
+    </button>
+    <p class="min-note">Please answer all 20 questions to continue</p>
 
     </div><!-- /mh-form-col -->
 
@@ -217,12 +219,12 @@
           <div class="mh-score-track">
             <div class="mh-score-fill" id="mh-score-fill" style="width:0%"></div>
             <div class="mh-score-zones">
-              <span style="left:0%"    title="Minimal">0</span>
-              <span style="left:20%"   title="Mild">20</span>
-              <span style="left:40%"   title="Moderate">40</span>
-              <span style="left:60%"   title="High">60</span>
-              <span style="left:80%"   title="Severe">80</span>
-              <span style="left:98%"   title="Max">100</span>
+              <span style="left:0%" title="Minimal">0</span>
+              <span style="left:20%" title="Mild">20</span>
+              <span style="left:40%" title="Moderate">40</span>
+              <span style="left:60%" title="High">60</span>
+              <span style="left:80%" title="Severe">80</span>
+              <span style="left:98%" title="Max">100</span>
             </div>
           </div>
           <div class="zone-labels">
@@ -263,25 +265,26 @@
         <div class="disclaimer-box">
           <strong>⚠️ Important Notice</strong>
           <p>This assessment is for <strong>self-awareness purposes only</strong>. It is not a clinical
-          diagnosis and does not replace evaluation by a qualified mental health professional.
-          If you are struggling, please seek professional support.</p>
+            diagnosis and does not replace evaluation by a qualified mental health professional.
+            If you are struggling, please seek professional support.</p>
         </div>
 
       </div><!-- /mh-results-content -->
     </div><!-- /mh-results-panel -->
 
-  </div><!-- /mh-container -->
-</section>
+    </div><!-- /mh-container -->
+  </section>
 
-<!-- ═══════════════════════════════════ FOOTER ═══════════════════════════════ -->
-<footer class="site-footer">
-  <div class="footer-inner">
-    <div class="footer-logo">🧠 HealthMind AI</div>
-    <p>Python · Flask · scikit-learn · Chart.js</p>
-    <p class="footer-disclaimer">For educational & hackathon purposes only · Not a clinical tool</p>
-  </div>
-</footer>
+  <!-- ═══════════════════════════════════ FOOTER ═══════════════════════════════ -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-logo">🧠 HealthMind AI</div>
+      <p>Python · Flask · scikit-learn · Chart.js</p>
+      <p class="footer-disclaimer">For educational & hackathon purposes only · Not a clinical tool</p>
+    </div>
+  </footer>
 
-<script src="{{ url_for('static', filename='js/mental_health.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/mental_health.js') }}"></script>
 </body>
+
 </html>

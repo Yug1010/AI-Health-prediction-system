@@ -7,20 +7,20 @@
 
 // ── State ─────────────────────────────────────────────────────────────────────
 const mhState = {
-  answers:     {},   // { mh_01: 2, mh_02: 0, … }
-  totalQ:      20,
-  gaugeChart:  null,
-  radarChart:  null,
+  answers: {},   // { mh_01: 2, mh_02: 0, … }
+  totalQ: 20,
+  gaugeChart: null,
+  radarChart: null,
 };
 
 const ANSWER_LABELS = ["Not at all", "Several days", "More than half the days", "Nearly every day"];
 
 const DOMAIN_COLORS = {
-  Mood:     "#028090",
-  Anxiety:  "#E67E22",
-  Sleep:    "#6C5CE7",
-  Stress:   "#E63946",
-  Social:   "#02C39A",
+  Mood: "#028090",
+  Anxiety: "#E67E22",
+  Sleep: "#6C5CE7",
+  Stress: "#E63946",
+  Social: "#02C39A",
   Physical: "#F7B731",
 };
 
@@ -52,11 +52,11 @@ function selectAnswer(qid, val, btn) {
 
 function updateProgress() {
   const answered = Object.keys(mhState.answers).length;
-  const total    = mhState.totalQ;
-  const pct      = Math.round((answered / total) * 100);
+  const total = mhState.totalQ;
+  const pct = Math.round((answered / total) * 100);
 
   document.getElementById("progress-text").textContent = `${answered} of ${total} answered`;
-  document.getElementById("progress-pct").textContent  = `${pct}%`;
+  document.getElementById("progress-pct").textContent = `${pct}%`;
   document.getElementById("progress-fill").style.width = `${pct}%`;
 
   document.getElementById("mh-analyse-btn").disabled = answered < total;
@@ -72,15 +72,15 @@ document.getElementById("mh-analyse-btn").addEventListener("click", async () => 
 
   const payload = {
     answers: mhState.answers,
-    age:     document.getElementById("mh-age").value    || null,
-    gender:  document.getElementById("mh-gender").value || null,
+    age: document.getElementById("mh-age").value || null,
+    gender: document.getElementById("mh-gender").value || null,
   };
 
   try {
-    const res  = await fetch("/predict-mental", {
-      method:  "POST",
+    const res = await fetch("/predict-mental", {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify(payload),
+      body: JSON.stringify(payload),
     });
     const data = await res.json();
 
@@ -122,10 +122,10 @@ function renderMHResults(data) {
 
   // Level badge
   const badge = document.getElementById("mh-level-badge");
-  badge.textContent        = `${data.emoji} ${data.level}`;
-  badge.style.background   = data.color + "33";
-  badge.style.color        = data.color;
-  badge.style.border       = `1px solid ${data.color}66`;
+  badge.textContent = `${data.emoji} ${data.level}`;
+  badge.style.background = data.color + "33";
+  badge.style.color = data.color;
+  badge.style.border = `1px solid ${data.color}66`;
 
   // Gauge
   drawMHGauge(data.score, data.color, data.level);
@@ -138,7 +138,7 @@ function renderMHResults(data) {
   // Summary
   const summaryBox = document.getElementById("mh-summary-box");
   summaryBox.style.borderLeftColor = data.color;
-  summaryBox.style.background      = data.color + "12";
+  summaryBox.style.background = data.color + "12";
   document.getElementById("mh-summary-text").textContent = data.summary;
 
   // Domain breakdown
@@ -158,18 +158,18 @@ function drawMHGauge(score, color, label) {
     type: "doughnut",
     data: {
       datasets: [{
-        data:            [score, 100 - score],
+        data: [score, 100 - score],
         backgroundColor: [color, "rgba(255,255,255,.12)"],
-        borderWidth:     0,
-        circumference:   270,
-        rotation:        -135,
+        borderWidth: 0,
+        circumference: 270,
+        rotation: -135,
       }],
     },
     options: {
-      responsive:  false,
-      cutout:      "72%",
+      responsive: false,
+      cutout: "72%",
       plugins: { legend: { display: false }, tooltip: { enabled: false } },
-      animation:   { duration: 1100, easing: "easeOutQuart" },
+      animation: { duration: 1100, easing: "easeOutQuart" },
     },
   });
 
@@ -183,21 +183,21 @@ function drawRadarChart(domainScores) {
 
   // Exclude Crisis domain from radar
   const entries = Object.entries(domainScores).filter(([d]) => d !== "Crisis");
-  const labels  = entries.map(([d]) => d);
-  const values  = entries.map(([, v]) => v);
+  const labels = entries.map(([d]) => d);
+  const values = entries.map(([, v]) => v);
 
   mhState.radarChart = new Chart(ctx, {
     type: "radar",
     data: {
       labels,
       datasets: [{
-        label:           "Your Score",
-        data:            values,
+        label: "Your Score",
+        data: values,
         backgroundColor: "rgba(2,128,144,.15)",
-        borderColor:     "#028090",
-        borderWidth:     2,
+        borderColor: "#028090",
+        borderWidth: 2,
         pointBackgroundColor: "#028090",
-        pointRadius:     5,
+        pointRadius: 5,
       }],
     },
     options: {
@@ -206,9 +206,9 @@ function drawRadarChart(domainScores) {
         r: {
           min: 0, max: 100,
           ticks: { stepSize: 25, font: { size: 10 }, color: "#64748B" },
-          grid:       { color: "rgba(0,0,0,.08)" },
+          grid: { color: "rgba(0,0,0,.08)" },
           angleLines: { color: "rgba(0,0,0,.08)" },
-          pointLabels:{ font: { size: 12, weight: "600" }, color: "#0A2540" },
+          pointLabels: { font: { size: 12, weight: "600" }, color: "#0A2540" },
         },
       },
       plugins: {
@@ -229,11 +229,11 @@ function renderDomainBars(domainScores) {
 
   const entries = Object.entries(domainScores)
     .filter(([d]) => d !== "Crisis")
-    .sort(([,a],[,b]) => b - a);
+    .sort(([, a], [, b]) => b - a);
 
   entries.forEach(([domain, score]) => {
     const color = DOMAIN_COLORS[domain] || "#028090";
-    const row   = document.createElement("div");
+    const row = document.createElement("div");
     row.className = "domain-bar-row";
     row.innerHTML = `
       <div class="domain-bar-header">

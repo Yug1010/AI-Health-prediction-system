@@ -1255,10 +1255,316 @@ select:focus {
   border-color: rgba(108, 92, 231, .25);
 }
 
-/* Family history impact note — purple tint to distinguish from preexisting (amber) */
+.mod-badge.report-boost {
+  background: rgba(2, 195, 154, .10);
+  color: #016B5A;
+  border-color: rgba(2, 195, 154, .3);
+}
+
+/* Impact note colours */
 .fh-impact-note {
   background: rgba(108, 92, 231, .06);
   border-left-color: #6C5CE7;
+}
+
+.report-impact-note {
+  background: rgba(2, 195, 154, .06);
+  border-left-color: #02C39A;
+}
+
+/* ── Report tabs ─────────────────────────────────────────────────────────── */
+.report-tabs {
+  display: flex;
+  gap: .4rem;
+  margin-bottom: 1rem;
+  background: var(--light);
+  border-radius: 9px;
+  padding: .3rem;
+}
+
+.report-tab {
+  flex: 1;
+  padding: .45rem .5rem;
+  border-radius: 7px;
+  border: none;
+  font-size: .82rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: var(--muted);
+  transition: all .2s;
+}
+
+.report-tab.active {
+  background: var(--white);
+  color: var(--teal);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, .08);
+}
+
+.report-tab:hover:not(.active) {
+  color: var(--navy);
+}
+
+/* ── Manual entry grid ───────────────────────────────────────────────────── */
+.manual-grid {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+.manual-row {
+  display: grid;
+  grid-template-columns: 1fr 130px;
+  align-items: center;
+  gap: .6rem;
+}
+
+.manual-row label {
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.manual-unit {
+  font-weight: 400;
+  color: #94A3B8;
+  font-size: .76rem;
+}
+
+.manual-input {
+  padding: .45rem .65rem;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-size: .88rem;
+  font-family: var(--font);
+  outline: none;
+  transition: border-color .2s;
+  text-align: right;
+}
+
+.manual-input:focus {
+  border-color: var(--teal);
+}
+
+/* ── Finding chip normal variant ─────────────────────────────────────────── */
+.finding-chip-normal {
+  opacity: .55;
+}
+
+.finding-chip-normal:hover {
+  opacity: .85;
+}
+
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 1.75rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+  background: #FAFCFF;
+  margin-bottom: .75rem;
+}
+
+.upload-zone:hover,
+.upload-zone.drag-over {
+  border-color: var(--teal);
+  background: rgba(2, 128, 144, .04);
+}
+
+.upload-icon {
+  font-size: 2rem;
+  margin-bottom: .4rem;
+}
+
+.upload-title {
+  font-size: .9rem;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: .2rem;
+}
+
+.upload-sub {
+  font-size: .82rem;
+  color: var(--muted);
+  margin-bottom: .3rem;
+}
+
+.upload-types {
+  font-size: .72rem;
+  color: #94A3B8;
+}
+
+/* ── File chosen state ───────────────────────────────────────────────────── */
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  background: var(--light);
+  border-radius: 9px;
+  padding: .6rem .9rem;
+  margin-bottom: .75rem;
+  border: 1px solid var(--border);
+}
+
+.file-icon {
+  font-size: 1.3rem;
+}
+
+.file-name {
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--navy);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-extract {
+  width: 100%;
+  padding: .7rem;
+  background: var(--navy);
+  color: var(--white);
+  font-size: .9rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background .2s, transform .2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+}
+
+.btn-extract:hover {
+  background: var(--teal);
+  transform: translateY(-1px);
+}
+
+/* ── Extracting loader ───────────────────────────────────────────────────── */
+.extract-loading {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  font-size: .85rem;
+  color: var(--muted);
+  padding: .5rem 0;
+}
+
+/* ── API key notice ──────────────────────────────────────────────────────── */
+.api-notice {
+  background: rgba(247, 183, 49, .08);
+  border: 1px solid rgba(247, 183, 49, .3);
+  border-radius: 8px;
+  padding: .65rem .9rem;
+  font-size: .78rem;
+  color: #8B6000;
+  margin-top: .6rem;
+  line-height: 1.5;
+}
+
+.api-notice code {
+  background: rgba(247, 183, 49, .2);
+  padding: .1rem .3rem;
+  border-radius: 4px;
+  font-size: .75rem;
+}
+
+/* ── Extracted findings ──────────────────────────────────────────────────── */
+.findings-section {
+  margin-top: .5rem;
+}
+
+.findings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: .5rem;
+}
+
+.report-type-badge {
+  display: inline-block;
+  background: rgba(2, 128, 144, .1);
+  border: 1px solid rgba(2, 128, 144, .25);
+  color: var(--teal);
+  font-size: .76rem;
+  font-weight: 700;
+  padding: .2rem .7rem;
+  border-radius: 50px;
+  margin-bottom: .65rem;
+}
+
+.findings-chips {
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+  margin-bottom: .6rem;
+}
+
+.finding-chip {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  border: 1px solid;
+  border-radius: 9px;
+  padding: .5rem .75rem;
+  transition: transform .15s;
+}
+
+.finding-chip:hover {
+  transform: translateX(2px);
+}
+
+.finding-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.finding-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.finding-name {
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.finding-val {
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+.finding-flag {
+  font-size: .7rem;
+  font-weight: 600;
+  white-space: nowrap;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.clinical-notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+  margin-top: .4rem;
+}
+
+.clinical-note {
+  font-size: .78rem;
+  color: var(--muted);
+  background: var(--light);
+  border-radius: 7px;
+  padding: .4rem .7rem;
+  line-height: 1.4;
 }
 
 /* ── Explain chart ───────────────────────────────────────────────────────── */

@@ -139,9 +139,136 @@
           </div>
         </div>
 
-        <!-- ── Step 2: Vitals ──────────────────────────────────────────────── -->
-        <div class="card step-card" id="card-vitals">
+        <!-- ── Step 2: Medical Reports ────────────────────────────────────── -->
+        <div class="card step-card" id="card-reports">
           <div class="card-step-badge">Step 2</div>
+          <h2 class="card-title">📋 Medical Reports</h2>
+          <p class="card-sub">Upload a PDF report or enter lab values manually — improves prediction accuracy</p>
+
+          <!-- Tab switcher -->
+          <div class="report-tabs">
+            <button class="report-tab active" id="tab-upload" data-tab="upload">📤 Upload PDF</button>
+            <button class="report-tab" id="tab-manual" data-tab="manual">✏️ Enter Values</button>
+          </div>
+
+          <!-- ── TAB 1: Upload PDF ─────────────────────────────────────────── -->
+          <div id="tab-content-upload">
+            <!-- Upload zone -->
+            <div class="upload-zone" id="upload-zone">
+              <input type="file" id="report-file-input" accept=".pdf" hidden />
+              <div class="upload-icon">📄</div>
+              <p class="upload-title">Drag & drop your PDF report here</p>
+              <p class="upload-sub">or <button class="btn-text"
+                  onclick="document.getElementById('report-file-input').click()">browse file</button></p>
+              <p class="upload-types">Supports: PDF only &nbsp;·&nbsp; Max 10 MB</p>
+              <p class="upload-types" style="margin-top:.3rem;color:#F7B731">📸 Have an image/photo? Use the
+                <strong>Enter Values</strong> tab instead</p>
+            </div>
+
+            <!-- File chosen -->
+            <div class="file-chosen hidden" id="file-chosen">
+              <div class="file-info">
+                <span class="file-icon">📄</span>
+                <span class="file-name" id="file-name">report.pdf</span>
+                <button class="btn-ghost" id="remove-file-btn">✕</button>
+              </div>
+              <button class="btn-extract" id="extract-btn">🔍 Extract Findings from PDF</button>
+            </div>
+
+            <!-- Loading -->
+            <div class="extract-loading hidden" id="extract-loading">
+              <div class="spinner" style="width:28px;height:28px;border-width:3px;"></div>
+              <span>Reading PDF…</span>
+            </div>
+          </div>
+
+          <!-- ── TAB 2: Manual Entry ───────────────────────────────────────── -->
+          <div id="tab-content-manual" class="hidden">
+            <p style="font-size:.78rem;color:var(--muted);margin-bottom:.9rem;">
+              Enter the values from your blood test report. Leave blank if not available.
+            </p>
+            <div class="manual-grid">
+              <div class="manual-row">
+                <label>Haemoglobin <span class="manual-unit">(g/dL)</span></label>
+                <input type="number" class="manual-input" id="m-hb" step="0.1" min="1" max="25"
+                  placeholder="e.g. 13.5" />
+              </div>
+              <div class="manual-row">
+                <label>WBC Count <span class="manual-unit">(cells/cumm)</span></label>
+                <input type="number" class="manual-input" id="m-wbc" step="100" min="500" max="100000"
+                  placeholder="e.g. 8000" />
+              </div>
+              <div class="manual-row">
+                <label>Platelets <span class="manual-unit">(thousands/µL)</span></label>
+                <input type="number" class="manual-input" id="m-plt" step="1" min="10" max="1000"
+                  placeholder="e.g. 250" />
+              </div>
+              <div class="manual-row">
+                <label>Fasting Blood Sugar <span class="manual-unit">(mg/dL)</span></label>
+                <input type="number" class="manual-input" id="m-fbs" step="1" min="40" max="600"
+                  placeholder="e.g. 95" />
+              </div>
+              <div class="manual-row">
+                <label>HbA1c <span class="manual-unit">(%)</span></label>
+                <input type="number" class="manual-input" id="m-hba1c" step="0.1" min="3" max="15"
+                  placeholder="e.g. 5.6" />
+              </div>
+              <div class="manual-row">
+                <label>Total Cholesterol <span class="manual-unit">(mg/dL)</span></label>
+                <input type="number" class="manual-input" id="m-chol" step="1" min="50" max="600"
+                  placeholder="e.g. 180" />
+              </div>
+              <div class="manual-row">
+                <label>LDL Cholesterol <span class="manual-unit">(mg/dL)</span></label>
+                <input type="number" class="manual-input" id="m-ldl" step="1" min="20" max="400"
+                  placeholder="e.g. 100" />
+              </div>
+              <div class="manual-row">
+                <label>Triglycerides <span class="manual-unit">(mg/dL)</span></label>
+                <input type="number" class="manual-input" id="m-trig" step="1" min="20" max="2000"
+                  placeholder="e.g. 130" />
+              </div>
+              <div class="manual-row">
+                <label>Creatinine <span class="manual-unit">(mg/dL)</span></label>
+                <input type="number" class="manual-input" id="m-creat" step="0.1" min="0.1" max="20"
+                  placeholder="e.g. 0.9" />
+              </div>
+              <div class="manual-row">
+                <label>SGPT / ALT <span class="manual-unit">(U/L)</span></label>
+                <input type="number" class="manual-input" id="m-sgpt" step="1" min="1" max="2000"
+                  placeholder="e.g. 35" />
+              </div>
+              <div class="manual-row">
+                <label>TSH <span class="manual-unit">(mIU/L)</span></label>
+                <input type="number" class="manual-input" id="m-tsh" step="0.01" min="0.01" max="100"
+                  placeholder="e.g. 2.5" />
+              </div>
+              <div class="manual-row">
+                <label>Uric Acid <span class="manual-unit">(mg/dL)</span></label>
+                <input type="number" class="manual-input" id="m-ua" step="0.1" min="0.5" max="20"
+                  placeholder="e.g. 5.0" />
+              </div>
+            </div>
+            <button class="btn-extract" id="apply-manual-btn" style="margin-top:.9rem">
+              ✅ Apply Lab Values
+            </button>
+          </div>
+
+          <!-- ── Findings result (shared by both tabs) ─────────────────────── -->
+          <div class="findings-section hidden" id="findings-section">
+            <div class="findings-header">
+              <span id="findings-count-label">0 findings</span>
+              <button class="btn-ghost" id="clear-findings-btn">✕ Clear</button>
+            </div>
+            <div id="report-type-badge" class="report-type-badge"></div>
+            <div id="findings-chips" class="findings-chips"></div>
+            <div id="clinical-notes-list" class="clinical-notes-list"></div>
+          </div>
+        </div>
+
+        <!-- ── Step 3: Vitals ──────────────────────────────────────────────── -->
+        <div class="card step-card" id="card-vitals">
+          <div class="card-step-badge">Step 3</div>
           <h2 class="card-title">🩺 Current Vitals</h2>
           <p class="card-sub">Leave blank if not measured — all fields are optional</p>
 
@@ -196,9 +323,9 @@
           </div>
         </div>
 
-        <!-- ── Step 3: Symptoms ────────────────────────────────────────────── -->
+        <!-- ── Step 4: Symptoms ────────────────────────────────────────────── -->
         <div class="card step-card" id="card-symptoms">
-          <div class="card-step-badge">Step 3</div>
+          <div class="card-step-badge">Step 4</div>
           <h2 class="card-title">🔍 Symptoms</h2>
           <p class="card-sub">Select all symptoms you are currently experiencing</p>
 
@@ -309,6 +436,12 @@
           <div id="family-history-panel" class="preexisting-panel hidden">
             <h3>🧬 Family History Risk Factors</h3>
             <div id="family-history-impact-list"></div>
+          </div>
+
+          <!-- Report impact -->
+          <div id="report-impact-panel" class="preexisting-panel hidden">
+            <h3>📋 Report Findings Impact</h3>
+            <div id="report-impact-list"></div>
           </div>
 
           <!-- Predictions -->

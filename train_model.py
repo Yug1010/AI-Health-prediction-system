@@ -3,6 +3,9 @@ HealthMind AI – Model Training Script
 Run this once to train and save the ML model:  python train_model.py
 """
 
+from data.disease_symptoms import SYMPTOMS, DISEASES
+from sklearn.model_selection import cross_val_score
+from sklearn.ensemble import RandomForestClassifier
 import numpy as np
 import pickle
 import os
@@ -10,10 +13,6 @@ import sys
 
 # Allow running from project root
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import cross_val_score
-from data.disease_symptoms import SYMPTOMS, DISEASES
 
 
 def generate_training_data():
@@ -72,7 +71,8 @@ def train_and_save(model_path: str = "model/healthmind_model.pkl"):
 
     # Quick cross-validation estimate
     cv_scores = cross_val_score(clf, X, y, cv=5, scoring="accuracy")
-    print(f"\n  Cross-val accuracy: {cv_scores.mean():.2%} ± {cv_scores.std():.2%}")
+    print(
+        f"\n  Cross-val accuracy: {cv_scores.mean():.2%} ± {cv_scores.std():.2%}")
 
     os.makedirs(os.path.dirname(model_path), exist_ok=True)
     model_data = {

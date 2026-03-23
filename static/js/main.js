@@ -14,6 +14,7 @@ const state = {
   selected: new Set(),
   selectedPreex: new Set(),
   selectedFamilyHist: new Set(),
+  reportFindings: [],      // extracted findings from uploaded report
   gaugeChart: null,
   explainChart: null,
   vitalsRanges: null,
@@ -285,6 +286,7 @@ async function runAnalysis() {
     gender: $("input-gender").value || null,
     preexisting: [...state.selectedPreex],
     family_history: [...state.selectedFamilyHist],
+    report_findings: state.reportFindings,
     vitals,
   };
 
@@ -342,6 +344,9 @@ function renderResults(data) {
 
   // Family history impact
   renderFamilyHistoryImpact(data.family_history_impact);
+
+  // Report findings impact
+  renderReportImpact(data.report_impact);
 
   // Predictions
   renderPredictions(data.predictions);
@@ -434,6 +439,8 @@ function renderPredictions(predictions) {
       badges.push(`<span class="mod-badge boost">⚕️ Boosted by preexisting conditions (×${p.preexisting_boost})</span>`);
     if (p.family_history_boost && p.family_history_boost > 1.05)
       badges.push(`<span class="mod-badge fh-boost">🧬 Elevated by family history (×${p.family_history_boost})</span>`);
+    if (p.report_boost && p.report_boost > 1.05)
+      badges.push(`<span class="mod-badge report-boost">📋 Confirmed by report findings (×${p.report_boost})</span>`);
 
     card.innerHTML = `
       <div class="pred-accent-bar" style="background:${p.risk_color}"></div>
@@ -517,6 +524,20 @@ function renderExplainChart(contributions) {
   });
 }
 
+// ── Report impact panel ────────────────────────────────────────────────────
+function renderReportImpact(notes) {
+  const panel = $("report-impact-panel");
+  const list = $("report-impact-list");
+  if (!panel || !notes || notes.length === 0) {
+    if (panel) panel.classList.add("hidden");
+    return;
+  }
+  panel.classList.remove("hidden");
+  list.innerHTML = notes.map(n =>
+    `<div class="impact-note report-impact-note">📋 ${n}</div>`
+  ).join("");
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 function riskColor(label) {
   return { Critical: "#E63946", High: "#E67E22", Medium: "#F7B731", Low: "#02C39A" }[label] || "#64748B";
@@ -530,6 +551,210 @@ function animateNumber(el, from, to, duration) {
   })(performance.now());
 }
 function easeOut(t) { return 1 - Math.pow(1 - t, 4); }
+
+// ══════════════════════════════════════════════════════════════════════════
+//  REPORT MODULE — Upload PDF tab + Manual Entry tab
+// ══════════════════════════════════════════════════════════════════════════
+
+const REPORT_TYPE_LABELS = {
+  blood_test: "🩸 Blood Test",
+  radiology: "🫁 Radiology / Imaging",
+  urine_test: "🧪 Urine Test",
+  other: "📋 Medical Report",
+};
+
+// ── Tab switcher ──────────────────────────────────────────────────────────
+document.querySelectorAll(".report-tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".report-tab").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const tab = btn.dataset.tab;
+    $("tab-content-upload").classList.toggle("hidden", tab !== "upload");
+    $("tab-content-manual").classList.toggle("hidden", tab !== "manual");
+    // Clear findings whenever tab changes
+    resetFindings();
+  });
+});
+
+// ── PDF Upload ────────────────────────────────────────────────────────────
+const uploadZone = $("upload-zone");
+const fileInput = $("report-file-input");
+
+uploadZone.addEventListener("click", () => fileInput.click());
+uploadZone.addEventListener("dragover", e => { e.preventDefault(); uploadZone.classList.add("drag-over"); });
+uploadZone.addEventListener("dragleave", () => uploadZone.classList.remove("drag-over"));
+uploadZone.addEventListener("drop", e => {
+  e.preventDefault();
+  uploadZone.classList.remove("drag-over");
+  if (e.dataTransfer.files[0]) handleFileChosen(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener("change", () => {
+  if (fileInput.files[0]) handleFileChosen(fileInput.files[0]);
+});
+
+function handleFileChosen(file) {
+  if (file.type !== "application/pdf") {
+    alert("Only PDF files are supported for auto-extraction.\n\nFor image/photo reports, please use the ✏️ Enter Values tab to input your lab values manually.");
+    return;
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    alert("File is too large. Maximum size is 10 MB.");
+    return;
+  }
+  $("upload-zone").classList.add("hidden");
+  $("file-chosen").classList.remove("hidden");
+  $("file-name").textContent = file.name;
+  $("extract-btn")._file = file;
+}
+
+$("extract-btn").addEventListener("click", async function () {
+  const file = this._file;
+  if (!file) return;
+
+  $("file-chosen").classList.add("hidden");
+  $("extract-loading").classList.remove("hidden");
+  resetFindings();
+
+  const formData = new FormData();
+  formData.append("report", file);
+
+  try {
+    const res = await fetch("/api/analyze-report", { method: "POST", body: formData });
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error || "Could not extract findings from this PDF. Try entering values manually in the ✏️ Enter Values tab.");
+      $("upload-zone").classList.remove("hidden");
+      $("file-chosen").classList.add("hidden");
+      return;
+    }
+
+    // If zero findings extracted, suggest manual tab
+    if (!data.findings || data.findings.length === 0) {
+      alert("No recognisable lab values were found in this PDF.\n\nPlease use the ✏️ Enter Values tab to input your values manually.");
+      $("upload-zone").classList.remove("hidden");
+      return;
+    }
+
+    state.reportFindings = data.findings;
+    renderExtractedFindings(data);
+
+  } catch (err) {
+    console.error(err);
+    alert("Network error while reading PDF.");
+    $("upload-zone").classList.remove("hidden");
+  } finally {
+    $("extract-loading").classList.add("hidden");
+  }
+});
+
+$("remove-file-btn").addEventListener("click", () => {
+  fileInput.value = "";
+  $("file-chosen").classList.add("hidden");
+  $("upload-zone").classList.remove("hidden");
+  resetFindings();
+});
+
+// ── Manual entry ──────────────────────────────────────────────────────────
+$("apply-manual-btn").addEventListener("click", async () => {
+  const MANUAL_IDS = ["hb", "wbc", "plt", "fbs", "hba1c", "chol", "ldl", "trig", "creat", "sgpt", "tsh", "ua"];
+  const values = {};
+  MANUAL_IDS.forEach(id => {
+    const el = $(`m-${id}`);
+    if (el && el.value !== "") values[id] = parseFloat(el.value);
+  });
+
+  if (Object.keys(values).length === 0) {
+    alert("Please enter at least one lab value before applying.");
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/process-manual", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ values }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error || "Could not process the values.");
+      return;
+    }
+
+    state.reportFindings = data.findings;
+    renderExtractedFindings(data);
+
+  } catch (err) {
+    console.error(err);
+    alert("Network error. Is the Flask server running?");
+  }
+});
+
+// ── Render findings (shared by both tabs) ─────────────────────────────────
+function renderExtractedFindings(data) {
+  const findings = data.findings || [];
+  $("findings-section").classList.remove("hidden");
+
+  const abnormal = findings.filter(f => f.flag !== "normal_finding" && f.flag !== "other").length;
+  const method = { ai: "🤖 AI", rule_based: "🔍 Auto", manual: "✏️ Manual" }[data.method] || "";
+
+  $("findings-count-label").textContent =
+    `${method}  ·  ${findings.length} finding${findings.length !== 1 ? "s" : ""}` +
+    (abnormal ? `  ·  ⚠️ ${abnormal} abnormal` : "  ·  ✅ All normal");
+
+  const rtBadge = $("report-type-badge");
+  rtBadge.textContent = REPORT_TYPE_LABELS[data.report_type] || "📋 Medical Report";
+  rtBadge.className = "report-type-badge";
+
+  const chipsEl = $("findings-chips");
+  chipsEl.innerHTML = "";
+
+  // Only show abnormal ones prominently; normal ones dimmed
+  const sorted = [...findings].sort((a, b) => {
+    const isAbnA = a.flag !== "normal_finding" && a.flag !== "other";
+    const isAbnB = b.flag !== "normal_finding" && b.flag !== "other";
+    return isAbnB - isAbnA;
+  });
+
+  sorted.forEach(f => {
+    const isAbnormal = f.flag !== "normal_finding" && f.flag !== "other";
+    const chip = document.createElement("div");
+    chip.className = `finding-chip ${isAbnormal ? "" : "finding-chip-normal"}`;
+    chip.style.borderColor = f.color + (isAbnormal ? "70" : "30");
+    chip.style.background = f.color + (isAbnormal ? "14" : "06");
+
+    const statusIcon = { normal: "✅", low: "⬇️", high: "⬆️", abnormal: "⚠️" }[f.status] || "📋";
+    chip.innerHTML = `
+      <span class="finding-icon">${f.icon}</span>
+      <div class="finding-info">
+        <span class="finding-name">${f.parameter}</span>
+        <span class="finding-val" style="color:${f.color}">${statusIcon} ${f.value} ${f.unit || ""}</span>
+      </div>
+      <span class="finding-flag" style="color:${f.color}">${f.flag_label}</span>`;
+    chipsEl.appendChild(chip);
+  });
+
+  const notesEl = $("clinical-notes-list");
+  notesEl.innerHTML = (data.clinical_notes || []).map(n =>
+    `<div class="clinical-note">💬 ${n}</div>`
+  ).join("");
+}
+
+// ── Clear findings ─────────────────────────────────────────────────────────
+$("clear-findings-btn").addEventListener("click", () => {
+  resetFindings();
+  // Also clear manual inputs
+  ["hb", "wbc", "plt", "fbs", "hba1c", "chol", "ldl", "trig", "creat", "sgpt", "tsh", "ua"]
+    .forEach(id => { const el = $(`m-${id}`); if (el) el.value = ""; });
+});
+
+function resetFindings() {
+  state.reportFindings = [];
+  $("findings-section").classList.add("hidden");
+  $("findings-chips").innerHTML = "";
+  $("clinical-notes-list").innerHTML = "";
+}
 
 // ── Start ──────────────────────────────────────────────────────────────────
 init();

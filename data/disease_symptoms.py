@@ -273,6 +273,175 @@ FAMILY_HISTORY_RISK = {
 }
 
 # ══════════════════════════════════════════════════════════════════════════════
+#  Medical Report Findings → Disease Risk
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Each flag (returned by Claude when it analyses a report) maps to disease risk
+# multipliers. These represent objective lab/imaging evidence — so multipliers
+# are stronger than family history but similar to personal preexisting conditions.
+REPORT_PARAMETER_FLAGS = {
+
+    # ── Blood test flags ──────────────────────────────────────────────────────
+    "anemia_low_hb": {
+        "label":  "Low Haemoglobin",
+        "icon":   "🩸",
+        "color":  "#E63946",
+        "boosts": {"Anemia": 2.2, "Heart Attack": 1.2, "Pneumonia": 1.1},
+    },
+    "low_rbc": {
+        "label":  "Low RBC Count",
+        "icon":   "🩸",
+        "color":  "#E67E22",
+        "boosts": {"Anemia": 1.8, "Malaria": 1.3},
+    },
+    "high_wbc_infection": {
+        "label":  "Elevated WBC (Infection)",
+        "icon":   "🦠",
+        "color":  "#E67E22",
+        "boosts": {"Pneumonia": 1.6, "Typhoid": 1.4, "Influenza (Flu)": 1.3,
+                   "COVID-19": 1.3, "Appendicitis": 1.4},
+    },
+    "low_platelets_dengue": {
+        "label":  "Low Platelets",
+        "icon":   "🔬",
+        "color":  "#E63946",
+        "boosts": {"Dengue Fever": 2.0, "Malaria": 1.5, "Anemia": 1.3},
+    },
+    "high_blood_sugar": {
+        "label":  "High Blood Sugar",
+        "icon":   "🩸",
+        "color":  "#E67E22",
+        "boosts": {"Diabetes (Type 2)": 2.0, "Hypertension": 1.3, "Heart Attack": 1.2},
+    },
+    "high_hba1c": {
+        "label":  "High HbA1c",
+        "icon":   "🩸",
+        "color":  "#E63946",
+        "boosts": {"Diabetes (Type 2)": 2.4, "Hypertension": 1.3, "Heart Attack": 1.3},
+    },
+    "high_cholesterol": {
+        "label":  "High Total Cholesterol",
+        "icon":   "💊",
+        "color":  "#E67E22",
+        "boosts": {"Heart Attack": 1.4, "Hypertension": 1.2},
+    },
+    "high_ldl": {
+        "label":  "High LDL Cholesterol",
+        "icon":   "💊",
+        "color":  "#E67E22",
+        "boosts": {"Heart Attack": 1.5, "Hypertension": 1.2},
+    },
+    "high_triglycerides": {
+        "label":  "High Triglycerides",
+        "icon":   "💊",
+        "color":  "#F7B731",
+        "boosts": {"Diabetes (Type 2)": 1.3, "Heart Attack": 1.3, "Hypertension": 1.1},
+    },
+    "high_creatinine": {
+        "label":  "High Creatinine (Kidney)",
+        "icon":   "🫘",
+        "color":  "#E67E22",
+        "boosts": {"Hypertension": 1.3, "Diabetes (Type 2)": 1.2, "Anemia": 1.2},
+    },
+    "high_liver_enzymes": {
+        "label":  "High Liver Enzymes (SGOT/SGPT)",
+        "icon":   "🫁",
+        "color":  "#E67E22",
+        "boosts": {"Typhoid": 1.5, "Malaria": 1.4, "Dengue Fever": 1.3,
+                   "Food Poisoning": 1.3},
+    },
+    "high_tsh": {
+        "label":  "High TSH (Hypothyroidism)",
+        "icon":   "🦋",
+        "color":  "#F7B731",
+        "boosts": {"Anemia": 1.3, "Hypertension": 1.1},
+    },
+    "low_tsh": {
+        "label":  "Low TSH (Hyperthyroidism)",
+        "icon":   "🦋",
+        "color":  "#F7B731",
+        "boosts": {"Hypertension": 1.2, "Heart Attack": 1.1},
+    },
+    "high_esr_crp": {
+        "label":  "Elevated ESR / CRP (Inflammation)",
+        "icon":   "🔬",
+        "color":  "#E67E22",
+        "boosts": {"Pneumonia": 1.4, "Typhoid": 1.3, "Dengue Fever": 1.2,
+                   "COVID-19": 1.3, "Malaria": 1.2},
+    },
+    "high_uric_acid": {
+        "label":  "High Uric Acid",
+        "icon":   "🔬",
+        "color":  "#F7B731",
+        "boosts": {"Hypertension": 1.1, "Diabetes (Type 2)": 1.1},
+    },
+
+    # ── Radiology / Imaging flags ─────────────────────────────────────────────
+    "pneumonia_consolidation": {
+        "label":  "Lung Consolidation (X-Ray/CT)",
+        "icon":   "🫁",
+        "color":  "#E63946",
+        "boosts": {"Pneumonia": 2.0, "COVID-19": 1.6, "Asthma": 1.2},
+    },
+    "pleural_effusion": {
+        "label":  "Pleural Effusion",
+        "icon":   "🫁",
+        "color":  "#E63946",
+        "boosts": {"Pneumonia": 1.8, "Heart Attack": 1.4, "Malaria": 1.3},
+    },
+    "cardiomegaly": {
+        "label":  "Cardiomegaly (Enlarged Heart)",
+        "icon":   "❤️",
+        "color":  "#E63946",
+        "boosts": {"Heart Attack": 1.9, "Hypertension": 1.6, "Anemia": 1.3},
+    },
+    "splenomegaly": {
+        "label":  "Splenomegaly (Enlarged Spleen)",
+        "icon":   "🔬",
+        "color":  "#E67E22",
+        "boosts": {"Malaria": 1.9, "Dengue Fever": 1.6, "Typhoid": 1.5, "Anemia": 1.4},
+    },
+    "hepatomegaly": {
+        "label":  "Hepatomegaly (Enlarged Liver)",
+        "icon":   "🫁",
+        "color":  "#E67E22",
+        "boosts": {"Malaria": 1.6, "Typhoid": 1.5, "Dengue Fever": 1.4},
+    },
+    "fatty_liver": {
+        "label":  "Fatty Liver (Sonography)",
+        "icon":   "🫁",
+        "color":  "#F7B731",
+        "boosts": {"Diabetes (Type 2)": 1.4, "Hypertension": 1.2},
+    },
+    "kidney_stone": {
+        "label":  "Kidney Stone (Sonography)",
+        "icon":   "🫘",
+        "color":  "#F7B731",
+        "boosts": {"Hypertension": 1.1},
+    },
+    "gallstone": {
+        "label":  "Gallstone (Sonography)",
+        "icon":   "🔬",
+        "color":  "#F7B731",
+        "boosts": {"Food Poisoning": 1.2, "Appendicitis": 1.1},
+    },
+
+    # ── Catch-all ─────────────────────────────────────────────────────────────
+    "normal_finding": {
+        "label":  "Within Normal Range",
+        "icon":   "✅",
+        "color":  "#02C39A",
+        "boosts": {},
+    },
+    "other": {
+        "label":  "Other Finding",
+        "icon":   "📋",
+        "color":  "#64748B",
+        "boosts": {},
+    },
+}
+
+# ══════════════════════════════════════════════════════════════════════════════
 #  NEW: Pre-existing conditions
 # ══════════════════════════════════════════════════════════════════════════════
 

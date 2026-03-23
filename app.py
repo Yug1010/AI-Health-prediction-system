@@ -5,9 +5,17 @@ Open:   http://127.0.0.1:5000
 """
 
 import os
+import io
+import re
+import json
+import base64
 import pickle
+import requests as http_requests
 import numpy as np
 from flask import Flask, render_template, request, jsonify
+
+import pdfplumber
+from PIL import Image
 
 from data.disease_symptoms import (
     SYMPTOMS, SYMPTOM_DISPLAY, SYMPTOM_CATEGORIES,
@@ -15,6 +23,7 @@ from data.disease_symptoms import (
     PREEXISTING_CONDITIONS, CONDITION_DISEASE_RISK,
     VITALS_RANGES, VITALS_EMERGENCY,
     FAMILY_HISTORY_CONDITIONS, FAMILY_HISTORY_RISK,
+    REPORT_PARAMETER_FLAGS,
 )
 
 app = Flask(__name__)
@@ -195,7 +204,8 @@ def calculate_risk_score(top: dict, n_symptoms: int,
                          vitals_bump: int = 0,
                          n_preexisting: int = 0,
                          age: int | None = None,
-                         n_family_hist: int = 0) -> int:
+                         n_family_hist: int = 0,
+                         n_report_findings: int = 0) -> int:
     prob = top["probability"] / 100
     risk_map = {"low": 0.25, "medium": 0.50, "high": 0.75, "critical": 1.0}
     risk_weight = risk_map.get(top["risk_level"], 0.5)
@@ -209,11 +219,12 @@ def calculate_risk_score(top: dict, n_symptoms: int,
             age_bump = 4
 
     prex_bump = min(n_preexisting * 4, 16)
-    # family history: gentler bump than personal history
     fh_bump = min(n_family_hist * 2, 10)
+    # objective evidence → stronger bump
+    report_bump = min(n_report_findings * 5, 20)
 
     score = (prob * 0.50 + risk_weight * 0.35 + sym_weight * 0.15) * 100
-    score += vitals_bump + age_bump + prex_bump + fh_bump
+    score += vitals_bump + age_bump + prex_bump + fh_bump + report_bump
     return min(100, round(score))
 
 
@@ -236,6 +247,274 @@ def check_symptom_emergency(symptoms: list) -> dict | None:
         if all(s in symptoms for s in combo):
             return {"triggered": True, "message": message, "combo": combo}
     return None
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  Helper – Medical Report Analysis
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Valid flags the AI is allowed to return
+_VALID_FLAGS = set(REPORT_PARAMETER_FLAGS.keys())
+
+CLAUDE_SYSTEM_PROMPT = """You are a clinical medical report analyzer.
+Extract every test parameter and finding from the provided report.
+Return ONLY a valid JSON object — no markdown, no explanation — in this exact schema:
+{
+  "report_type": "blood_test | radiology | urine_test | other",
+  "findings": [
+    {
+      "parameter": "<test name>",
+      "value":     "<numeric or text value>",
+      "unit":      "<unit or empty string>",
+      "status":    "normal | low | high | abnormal",
+      "flag":      "<one flag from the allowed list>"
+    }
+  ],
+  "clinical_notes": ["<one-line clinical observation>"]
+}
+
+Allowed flags (choose the closest match, use "other" if none fit):
+anemia_low_hb, low_rbc, high_wbc_infection, low_platelets_dengue,
+high_blood_sugar, high_hba1c, high_cholesterol, high_ldl, high_triglycerides,
+high_creatinine, high_liver_enzymes, high_tsh, low_tsh, high_esr_crp,
+high_uric_acid, pneumonia_consolidation, pleural_effusion, cardiomegaly,
+splenomegaly, hepatomegaly, fatty_liver, kidney_stone, gallstone,
+normal_finding, other
+
+Rules:
+- Only flag abnormal findings unless the result is explicitly within reference range.
+- If a value is within normal range, use flag "normal_finding".
+- Never invent values — only extract what is in the report."""
+
+
+def _extract_pdf_text(file_bytes: bytes) -> str:
+    """Extract all text from a PDF file."""
+    text_parts = []
+    with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+        for page in pdf.pages:
+            t = page.extract_text()
+            if t:
+                text_parts.append(t)
+    return "\n".join(text_parts)
+
+
+def _image_to_base64(file_bytes: bytes, mime: str) -> str:
+    """Return base64-encoded image string."""
+    return base64.standard_b64encode(file_bytes).decode("utf-8")
+
+
+def _call_claude_api(content: list) -> dict:
+    """
+    Call Anthropic Messages API.
+    Requires ANTHROPIC_API_KEY environment variable.
+    Returns parsed JSON dict from Claude's reply.
+    """
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        raise ValueError("ANTHROPIC_API_KEY not set")
+
+    payload = {
+        "model":      "claude-opus-4-5",
+        "max_tokens": 1500,
+        "system":     CLAUDE_SYSTEM_PROMPT,
+        "messages":   [{"role": "user", "content": content}],
+    }
+    resp = http_requests.post(
+        "https://api.anthropic.com/v1/messages",
+        headers={
+            "x-api-key":         api_key,
+            "anthropic-version": "2023-06-01",
+            "content-type":      "application/json",
+        },
+        json=payload,
+        timeout=30,
+    )
+    resp.raise_for_status()
+    data = resp.json()
+    raw_txt = data["content"][0]["text"].strip()
+
+    # Strip markdown fences if present
+    raw_txt = re.sub(r"^```(?:json)?\s*", "", raw_txt)
+    raw_txt = re.sub(r"\s*```$",          "", raw_txt)
+    return json.loads(raw_txt)
+
+
+def analyze_report_file(file_bytes: bytes, mime_type: str) -> dict:
+    """
+    Main dispatcher: extract text from PDF or pass image to Claude.
+    Falls back to rule-based regex extraction if no API key is available.
+    Returns { findings, report_type, clinical_notes, method }.
+    """
+    is_pdf = mime_type == "application/pdf"
+    is_image = mime_type.startswith("image/")
+
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+
+    # ── Try Claude API ────────────────────────────────────────────────────────
+    if api_key:
+        try:
+            if is_pdf:
+                text = _extract_pdf_text(file_bytes)
+                if not text.strip():
+                    raise ValueError("No text found in PDF")
+                content = [
+                    {"type": "text", "text": f"Medical report:\n\n{text}"}]
+            elif is_image:
+                b64 = _image_to_base64(file_bytes, mime_type)
+                content = [
+                    {"type": "image", "source": {"type": "base64",
+                                                 "media_type": mime_type,
+                                                 "data": b64}},
+                    {"type": "text",  "text": "Extract all findings from this medical report image."},
+                ]
+            else:
+                raise ValueError(f"Unsupported file type: {mime_type}")
+
+            result = _call_claude_api(content)
+            # Sanitise flags
+            for f in result.get("findings", []):
+                if f.get("flag") not in _VALID_FLAGS:
+                    f["flag"] = "other"
+            result["method"] = "ai"
+            return result
+
+        except Exception as e:
+            # Fall through to rule-based
+            print(
+                f"[Report] Claude API failed ({e}), falling back to rule-based extraction.")
+
+    # ── Rule-based fallback (works without API key) ────────────────────────────
+    if is_pdf:
+        text = _extract_pdf_text(file_bytes)
+    else:
+        text = ""   # Can't OCR without API
+
+    findings = _rule_based_extract(text)
+    report_type = _guess_report_type(text)
+    clinical_notes = [
+        f"Extracted {len(findings)} finding(s) using pattern matching."]
+    if not api_key:
+        clinical_notes.append(
+            "Set ANTHROPIC_API_KEY for AI-powered extraction (images + complex PDFs)."
+        )
+    return {
+        "report_type":    report_type,
+        "findings":       findings,
+        "clinical_notes": clinical_notes,
+        "method":         "rule_based",
+    }
+
+
+def _guess_report_type(text: str) -> str:
+    t = text.lower()
+    if any(w in t for w in ["haemoglobin", "hemoglobin", "wbc", "rbc", "platelets", "hba1c"]):
+        return "blood_test"
+    if any(w in t for w in ["x-ray", "chest pa", "sonography", "ultrasound", "ct scan", "mri"]):
+        return "radiology"
+    if any(w in t for w in ["urine", "creatinine", "urea", "albumin"]):
+        return "urine_test"
+    return "other"
+
+
+def _rule_based_extract(text: str) -> list:
+    """Regex-based extraction of common blood test values."""
+    findings = []
+    t = text
+
+    patterns = [
+        # Haemoglobin
+        (r"h[ae]moglobin[^\d]*(\d+\.?\d*)\s*(g/dl|g%)?", "Haemoglobin", "g/dL",
+         lambda v: "anemia_low_hb" if v < 12 else "normal_finding",
+         lambda v: "low" if v < 12 else "normal"),
+        # WBC
+        (r"(?:wbc|white blood cell)[^\d]*(\d+\.?\d*)\s*(cells/cumm|10\^3)?", "WBC Count", "cells/cumm",
+         lambda v: "high_wbc_infection" if v > 11000 else "normal_finding",
+         lambda v: "high" if v > 11000 else "normal"),
+        # Platelets
+        (r"platelets?[^\d]*(\d+\.?\d*)\s*(lakhs?|10\^3|thou)?", "Platelets", "thousands/µL",
+         lambda v: "low_platelets_dengue" if v < 150 else "normal_finding",
+         lambda v: "low" if v < 150 else "normal"),
+        # Fasting blood sugar
+        (r"(?:fasting|fbs)[^\d]*(\d+\.?\d*)\s*(mg/dl)?", "Fasting Blood Sugar", "mg/dL",
+         lambda v: "high_blood_sugar" if v >= 126 else "normal_finding",
+         lambda v: "high" if v >= 126 else "normal"),
+        # HbA1c
+        (r"hba1c[^\d]*(\d+\.?\d*)\s*%?", "HbA1c", "%",
+         lambda v: "high_hba1c" if v >= 6.5 else "normal_finding",
+         lambda v: "high" if v >= 6.5 else "normal"),
+        # Total Cholesterol
+        (r"(?:total\s*)?cholesterol[^\d]*(\d+\.?\d*)\s*(mg/dl)?", "Total Cholesterol", "mg/dL",
+         lambda v: "high_cholesterol" if v > 200 else "normal_finding",
+         lambda v: "high" if v > 200 else "normal"),
+        # LDL
+        (r"ldl[^\d]*(\d+\.?\d*)\s*(mg/dl)?", "LDL Cholesterol", "mg/dL",
+         lambda v: "high_ldl" if v > 130 else "normal_finding",
+         lambda v: "high" if v > 130 else "normal"),
+        # Triglycerides
+        (r"triglycerides?[^\d]*(\d+\.?\d*)\s*(mg/dl)?", "Triglycerides", "mg/dL",
+         lambda v: "high_triglycerides" if v > 150 else "normal_finding",
+         lambda v: "high" if v > 150 else "normal"),
+        # Creatinine
+        (r"creatinine[^\d]*(\d+\.?\d*)\s*(mg/dl)?", "Creatinine", "mg/dL",
+         lambda v: "high_creatinine" if v > 1.3 else "normal_finding",
+         lambda v: "high" if v > 1.3 else "normal"),
+        # SGPT / ALT
+        (r"(?:sgpt|alt)[^\d]*(\d+\.?\d*)\s*(u/l|iu/l)?", "SGPT/ALT", "U/L",
+         lambda v: "high_liver_enzymes" if v > 40 else "normal_finding",
+         lambda v: "high" if v > 40 else "normal"),
+        # TSH
+        (r"tsh[^\d]*(\d+\.?\d*)\s*(miu/l|uiu/ml)?", "TSH", "mIU/L",
+         lambda v: "high_tsh" if v > 4.5 else (
+             "low_tsh" if v < 0.4 else "normal_finding"),
+         lambda v: "high" if v > 4.5 else ("low" if v < 0.4 else "normal")),
+    ]
+
+    for pattern, name, unit, flag_fn, status_fn in patterns:
+        m = re.search(pattern, t, re.IGNORECASE)
+        if m:
+            try:
+                val = float(m.group(1))
+                flag = flag_fn(val)
+                status = status_fn(val)
+                findings.append({
+                    "parameter": name,
+                    "value":     str(val),
+                    "unit":      unit,
+                    "status":    status,
+                    "flag":      flag,
+                })
+            except (ValueError, IndexError):
+                pass
+
+    return findings
+
+
+def apply_report_modifiers(predictions: list, findings: list) -> tuple[list, list]:
+    """
+    Boost prediction probabilities based on extracted report findings.
+    Returns updated predictions + impact notes.
+    """
+    impact_notes = []
+    for p in predictions:
+        disease = p["condition"]
+        total_mult = 1.0
+        reasons = []
+        for finding in findings:
+            flag = finding.get("flag", "other")
+            meta = REPORT_PARAMETER_FLAGS.get(flag, {})
+            mult = meta.get("boosts", {}).get(disease, 1.0)
+            if mult > 1.0:
+                reasons.append(f"{meta['label']} (+{round((mult-1)*100)}%)")
+                total_mult *= mult
+        if total_mult > 1.0:
+            p["probability"] = round(
+                min(99.9, p["probability"] * total_mult), 1)
+            note = f"{disease} risk elevated due to: {', '.join(reasons)}"
+            impact_notes.append(note)
+        p["report_boost"] = round(total_mult, 2)
+
+    predictions.sort(key=lambda x: x["probability"], reverse=True)
+    return predictions, impact_notes
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -272,6 +551,122 @@ def api_meta():
     })
 
 
+@app.route("/api/analyze-report", methods=["POST"])
+def api_analyze_report():
+    """
+    Accepts: multipart/form-data with field 'report' (PDF or image).
+    Returns: { report_type, findings, clinical_notes, method, has_api_key }
+    """
+    if "report" not in request.files:
+        return jsonify({"error": "No file uploaded. Please attach a file."}), 400
+
+    file = request.files["report"]
+    mime_type = file.content_type or "application/octet-stream"
+    allowed = {"application/pdf", "image/jpeg",
+               "image/jpg", "image/png", "image/webp"}
+
+    if mime_type not in allowed:
+        return jsonify({"error": f"Unsupported file type '{mime_type}'. Please upload a PDF or image (JPG/PNG)."}), 415
+
+    file_bytes = file.read()
+    if len(file_bytes) > 10 * 1024 * 1024:   # 10 MB limit
+        return jsonify({"error": "File is too large (max 10 MB)."}), 413
+
+    try:
+        result = analyze_report_file(file_bytes, mime_type)
+    except Exception as e:
+        return jsonify({"error": f"Could not process report: {str(e)}"}), 500
+
+    # Attach display info to each finding
+    for f in result.get("findings", []):
+        meta = REPORT_PARAMETER_FLAGS.get(f.get("flag", "other"), {})
+        f["icon"] = meta.get("icon",  "📋")
+        f["color"] = meta.get("color", "#64748B")
+        f["flag_label"] = meta.get("label", "Finding")
+        f["display"] = f"{f['parameter']}: {f['value']} {f.get('unit', '')}".strip(
+        )
+
+    result["has_api_key"] = bool(os.environ.get("ANTHROPIC_API_KEY"))
+    return jsonify(result)
+
+
+@app.route("/api/process-manual", methods=["POST"])
+def api_process_manual():
+    """
+    Accepts: { "values": { "hb": 9.5, "wbc": 14500, ... } }
+    Runs the same rule-based thresholds as _rule_based_extract but from
+    explicitly provided key-value pairs — no file, no API key needed.
+    Returns: same schema as /api/analyze-report
+    """
+    body = request.get_json(force=True)
+    values = body.get("values", {})
+
+    def get(k):
+        v = values.get(k)
+        return float(v) if v not in (None, "", 0) else None
+
+    findings = []
+
+    specs = [
+        ("hb",    "Haemoglobin",          "g/dL",
+         lambda v: ("anemia_low_hb",       "low") if v < 12 else ("normal_finding", "normal"),),
+        ("wbc",   "WBC Count",            "cells/cumm",
+         lambda v: ("high_wbc_infection",  "high") if v > 11000 else ("normal_finding", "normal"),),
+        ("plt",   "Platelets",            "thousands/µL",
+         lambda v: ("low_platelets_dengue", "low") if v < 150 else ("normal_finding", "normal"),),
+        ("fbs",   "Fasting Blood Sugar",  "mg/dL",
+         lambda v: ("high_blood_sugar",    "high") if v >= 126 else ("normal_finding", "normal"),),
+        ("hba1c", "HbA1c",               "%",
+         lambda v: ("high_hba1c",          "high") if v >= 6.5 else ("normal_finding", "normal"),),
+        ("chol",  "Total Cholesterol",   "mg/dL",
+         lambda v: ("high_cholesterol",    "high") if v > 200 else ("normal_finding", "normal"),),
+        ("ldl",   "LDL Cholesterol",     "mg/dL",
+         lambda v: ("high_ldl",            "high") if v > 130 else ("normal_finding", "normal"),),
+        ("trig",  "Triglycerides",       "mg/dL",
+         lambda v: ("high_triglycerides",  "high") if v > 150 else ("normal_finding", "normal"),),
+        ("creat", "Creatinine",          "mg/dL",
+         lambda v: ("high_creatinine",     "high") if v > 1.3 else ("normal_finding", "normal"),),
+        ("sgpt",  "SGPT / ALT",          "U/L",
+         lambda v: ("high_liver_enzymes",  "high") if v > 40 else ("normal_finding", "normal"),),
+        ("tsh",   "TSH",                 "mIU/L",
+         lambda v: ("high_tsh", "high") if v > 4.5 else
+                   (("low_tsh", "low") if v < 0.4 else ("normal_finding", "normal")),),
+        ("ua",    "Uric Acid",           "mg/dL",
+         lambda v: ("high_uric_acid",      "high") if v > 7.0 else ("normal_finding", "normal"),),
+    ]
+
+    for key, name, unit, fn in specs:
+        val = get(key)
+        if val is None:
+            continue
+        flag, status = fn(val)
+        meta = REPORT_PARAMETER_FLAGS.get(flag, {})
+        findings.append({
+            "parameter": name,
+            "value":     str(val),
+            "unit":      unit,
+            "status":    status,
+            "flag":      flag,
+            "icon":      meta.get("icon",  "📋"),
+            "color":     meta.get("color", "#64748B"),
+            "flag_label": meta.get("label", "Finding"),
+            "display":   f"{name}: {val} {unit}",
+        })
+
+    abnormal = [f for f in findings if f["flag"]
+                not in ("normal_finding", "other")]
+    notes = [f"{len(abnormal)} abnormal value(s) found out of {len(findings)} entered."] \
+        if findings else ["No values entered."]
+
+    return jsonify({
+        "report_type":    "blood_test",
+        "findings":       findings,
+        "clinical_notes": notes,
+        "method":         "manual",
+        "has_api_key":    bool(os.environ.get("ANTHROPIC_API_KEY")),
+    })
+
+
 @app.route("/api/predict", methods=["POST"])
 def api_predict():
     """
@@ -292,12 +687,13 @@ def api_predict():
       }
     """
     body = request.get_json(force=True)
-    selected = body.get("symptoms",       [])
-    age = body.get("age",            None)
-    gender = body.get("gender",         None)
-    preexisting = body.get("preexisting",    [])
-    family_history = body.get("family_history", [])
-    vitals_raw = body.get("vitals",         {})
+    selected = body.get("symptoms",        [])
+    age = body.get("age",             None)
+    gender = body.get("gender",          None)
+    preexisting = body.get("preexisting",     [])
+    family_history = body.get("family_history",  [])
+    report_findings = body.get("report_findings", [])   # list of finding dicts
+    vitals_raw = body.get("vitals",          {})
 
     # ── Validation ────────────────────────────────────────────────────────────
     if not selected:
@@ -342,6 +738,7 @@ def api_predict():
             "age_modifier_label":   "",
             "preexisting_boost":    1.0,
             "family_history_boost": 1.0,
+            "report_boost":         1.0,
         })
 
     if not predictions:
@@ -363,6 +760,12 @@ def api_predict():
         predictions, family_history_impact = apply_family_history_modifiers(
             predictions, family_history)
 
+    # ── Apply medical report modifiers ─────────────────────────────────────────
+    report_impact = []
+    if report_findings:
+        predictions, report_impact = apply_report_modifiers(
+            predictions, report_findings)
+
     # Keep top 3 after re-sorting
     predictions = predictions[:3]
 
@@ -377,6 +780,8 @@ def api_predict():
         n_preexisting=len(preexisting),
         age=int(age) if age else None,
         n_family_hist=len(family_history),
+        n_report_findings=len([f for f in report_findings if f.get(
+            "flag", "other") not in ("normal_finding", "other")]),
     )
     risk_label = get_risk_label(risk_score)
 
@@ -441,6 +846,7 @@ def api_predict():
         "vitals_summary":         vitals_analysis["summary"],
         "preexisting_impact":     preexisting_impact,
         "family_history_impact":  family_history_impact,
+        "report_impact":          report_impact,
         "patient_profile":        patient_profile,
     })
 
