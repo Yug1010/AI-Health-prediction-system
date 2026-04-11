@@ -11,9 +11,6 @@ venv/
 dist/
 build/
 
-# Model (regenerated on first run)
-model/healthmind_model.pkl
-
 # Flask
 instance/
 .webassets-cache
@@ -31,3 +28,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# NOTE: model/healthmind_model.pkl is intentionally tracked
+# so Vercel can use the pre-trained model without retraining.
