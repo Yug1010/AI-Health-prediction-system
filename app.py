@@ -10,6 +10,7 @@ import re
 import json
 import base64
 import pickle
+import tempfile                    # ← ADDED FOR VERCEL
 import requests as http_requests
 import numpy as np
 from flask import Flask, render_template, request, jsonify
@@ -32,12 +33,23 @@ MODEL_PATH = "model/healthmind_model.pkl"
 
 # ── Model loading ─────────────────────────────────────────────────────────────
 def load_model():
-    if not os.path.exists(MODEL_PATH):
-        print("No trained model found — training now (~10 seconds)…")
-        from train_model import train_and_save
-        return train_and_save(MODEL_PATH)
-    with open(MODEL_PATH, "rb") as f:
-        return pickle.load(f)
+    # 1. Try the committed model path (works locally + on Vercel after git add)
+    if os.path.exists(MODEL_PATH):
+        with open(MODEL_PATH, "rb") as f:
+            return pickle.load(f)
+
+    # 2. Vercel filesystem is read-only except /tmp.
+    #    If model was committed, step 1 handles it.
+    #    If somehow missing, check /tmp (cached from a previous cold start).
+    tmp_path = "/tmp/healthmind_model.pkl"
+    if os.path.exists(tmp_path):
+        with open(tmp_path, "rb") as f:
+            return pickle.load(f)
+
+    # 3. Last resort — train fresh and save to /tmp (slow ~10s cold start).
+    print("No model found — training into /tmp (Vercel cold start)…")
+    from train_model import train_and_save
+    return train_and_save(tmp_path)
 
 
 model_data = load_model()
